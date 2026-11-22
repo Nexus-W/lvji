@@ -1,0 +1,57 @@
+name: luji
+description: "旅迹 - 本地旅行相册 App（纯本地，无账号/无同步/无后端）"
+publish_to: 'none'
+
+version: 1.0.70+70
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+
+# 依赖版本锁定：与《技术方案-V1.md》§2.3 保持一致，不要升级到 latest。
+dependencies:
+  flutter:
+    sdk: flutter
+
+  provider: ^6.1.2
+  permission_handler: ^11.3.1  # 请求 ACCESS_MEDIA_LOCATION（读取原始照片位置）
+  photo_manager: ^3.6.0        # MediaStore 直读（经纬度不依赖 EXIF）
+  wechat_assets_picker: ^9.3.0 # 基于 photo_manager 的相册多选 UI
+  flutter_image_compress: ^2.3.0
+  sqflite: ^2.3.3
+  path_provider: ^2.1.4
+  path: ^1.9.0
+  gal: ^2.3.0                 # 保存图片到系统相册
+  share_plus: ^10.1.4          # 系统分享面板
+  receive_sharing_intent: ^1.8.0  # 接收"分享到旅迹"
+  intl: ^0.19.0                # 日期格式化
+  crypto: ^3.0.5               # 文件哈希去重
+  flutter_tencent_map: ^1.0.1
+  archive: ^4.5.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^4.0.0
+  sqflite_common_ffi: ^2.3.3   # 仅测试用：让 sqflite 能在 Dart VM 里跑
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    # 腾讯地图 Key 不进仓库：run.bat 读取 .env 后以 --dart-define 传入。
+    - assets/world_map.png
+    - assets/china_map.png
+    - assets/china_provinces.json
+    - assets/world_countries.json
+
+# sqlite3 包的 native-assets hook 默认从 GitHub 下载预编译 DLL，本机网络无法访问 GitHub。
+# 改用系统自带 SQLite（Windows 用 winsqlite3.dll，其余平台用 libsqlite3），仅影响测试环境
+# （sqflite_common_ffi 是 dev_dependency，App 运行时走 sqflite 的平台内置 SQLite）。
+hooks:
+  user_defines:
+    sqlite3:
+      source: system
+      name:
+        windows: winsqlite3
+        default: sqlite3

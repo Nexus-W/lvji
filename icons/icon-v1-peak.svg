@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <radialGradient id="b1" cx="50%" cy="40%" r="72%">
+      <stop offset="0%" stop-color="#151E28"/>
+      <stop offset="100%" stop-color="#080D12"/>
+    </radialGradient>
+    <linearGradient id="p1" x1="0" y1="790" x2="0" y2="380" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#3DDC97" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#3DDC97" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#b1)"/>
+
+  <!-- 纯线条，不填充：简笔画，没有多余形状 -->
+  <path d="M148 782 L350 468 L472 600 L622 378 L876 782"
+        fill="none" stroke="url(#p1)" stroke-width="30"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- 峰顶右侧的太阳 -->
+  <circle cx="752" cy="284" r="34" fill="#3DDC97"/>
+</svg>

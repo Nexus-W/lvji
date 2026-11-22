@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>旅影 TripNest · C1 交互原型</title>
+<link rel="stylesheet" href="scenes.css">
+<style>
+  :root{
+    --bg:#05080B; --panel:#0F141B; --panel2:#141A23; --line:#232C39;
+    --t1:#E9EEF6; --t2:#8C97A9; --t3:#5C6675;
+    --accent:#3DDC97; --warn:#FFB454; --info:#6C8CFF;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--bg); color:var(--t1); overflow:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  }
+  .stage{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px 0}
+  .device{
+    height:min(880px,92vh); aspect-ratio:420/880; border-radius:40px; overflow:hidden;
+    border:1px solid #2A3341; background:#0A0F14; position:relative;
+    box-shadow:0 40px 90px -40px #000, 0 0 0 7px #05080B;
+  }
+  .app{height:100%;display:flex;flex-direction:column;position:relative}
+
+  /* ---------- 地图 ---------- */
+  .mapwrap{
+    position:relative;flex:0 0 auto;height:46%;overflow:hidden;background:#07100F;
+    touch-action:none;cursor:grab;user-select:none;
+  }
+  .mapwrap.dragging{cursor:grabbing}
+  #terrain{
+    position:absolute;left:0;top:0;width:1000px;height:1000px;
+    transform-origin:0 0;will-change:transform;overflow:visible;
+  }
+  .markers{position:absolute;inset:0;pointer-events:none;z-index:4}
+  .mk{
+    position:absolute;left:0;top:0;pointer-events:auto;cursor:pointer;
+    will-change:transform;
+  }
+  .cluster{
+    display:flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:999px;
+    background:rgba(8,14,18,.84);border:1px solid rgba(61,220,151,.5);
+    backdrop-filter:blur(8px);box-shadow:0 8px 22px rgba(0,0,0,.6);
+    transition:border-color .15s, transform .12s;
+  }
+  .cluster:hover{border-color:var(--accent)}
+  .stack{display:flex}
+  .stack i{
+    display:block;width:22px;height:22px;border-radius:6px;margin-right:-8px;
+    border:1px solid rgba(255,255,255,.4);position:relative;overflow:hidden;
+  }
+  .stack i:last-child{margin-right:0}
+  .num{display:flex;flex-direction:column;line-height:1.1}
+  .num b{font-size:12px;font-weight:700;color:#EAF6F1;letter-spacing:.02em}
+  .num small{font-size:9px;color:#7FA39A;margin-top:1px}
+  .single{width:38px;height:38px;border-radius:8px;border:1.6px solid rgba(255,255,255,.75);
+    box-shadow:0 8px 20px rgba(0,0,0,.7);overflow:hidden;position:relative}
+  .single::after{content:"";position:absolute;left:50%;bottom:-7px;width:2px;height:7px;
+    transform:translateX(-50%);background:rgba(255,255,255,.55)}
+
+  /* ---------- 地图浮层 ---------- */
+  .mtop{position:absolute;left:0;right:0;top:0;z-index:6;display:flex;align-items:center;gap:8px;
+    padding:16px 16px 24px;background:linear-gradient(180deg,rgba(5,8,11,.85),transparent);pointer-events:none}
+  .pillwrap{position:relative;pointer-events:auto}
+  .pill{
+    pointer-events:auto;background:rgba(10,15,20,.8);backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 12px;
+    font-size:12px;font-weight:600;letter-spacing:-.1px;color:var(--t1);
+    font-family:inherit;display:flex;align-items:center;gap:8px;cursor:pointer;
+  }
+  .pill:active{border-color:rgba(61,220,151,.5)}
+  .pill .car{font-style:normal;font-size:9px;color:var(--t3)}
+  .tripmenu{
+    position:absolute;left:0;top:calc(100% + 6px);min-width:168px;display:none;
+    background:rgba(12,17,23,.96);backdrop-filter:blur(14px);border:1px solid var(--line);
+    border-radius:11px;padding:4px;box-shadow:0 18px 40px -18px #000;z-index:30;
+  }
+  .tripmenu.show{display:block}
+  .tripmenu .ti{
+    display:flex;align-items:center;gap:8px;padding:8px 8px;border-radius:8px;
+    font-size:12px;color:var(--t2);cursor:pointer;
+  }
+  .tripmenu .ti:hover{background:rgba(255,255,255,.06);color:var(--t1)}
+  .tripmenu .ti.on{color:var(--accent)}
+  .tripmenu .ti .ck{width:12px;font-size:12px}
+  .mbtn{pointer-events:auto;width:32px;height:32px;border-radius:10px;
+    background:rgba(10,15,20,.8);border:1px solid rgba(255,255,255,.1);color:var(--t2);
+    font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+    backdrop-filter:blur(10px)}
+  .mbtn:active{color:var(--accent)}
+  .mctl{position:absolute;right:12px;bottom:56px;z-index:6;display:flex;flex-direction:column;gap:8px}
+  .mctl>*{width:32px;height:32px;border-radius:9px;background:rgba(10,15,20,.82);
+    border:1px solid rgba(255,255,255,.1);color:var(--t1);font-size:15px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);
+    text-decoration:none;padding:0}
+  .mctl-go{font-size:20px;line-height:1;padding-bottom:2px}
+  .mctl>*:active{color:var(--accent);border-color:rgba(61,220,151,.5)}
+  .maptag{position:absolute;left:12px;bottom:26px;z-index:6;font-size:9px;
+    color:rgba(140,151,169,.55);letter-spacing:.01em}
+  .follow{
+    position:absolute;left:12px;bottom:44px;z-index:6;font-size:9px;font-weight:700;
+    color:var(--accent);background:rgba(5,8,11,.72);padding:4px 8px;border-radius:6px;
+    transition:opacity .3s;
+  }
+
+  /* ---------- 下半屏 ---------- */
+  .sheet{
+    flex:1;min-height:0;display:flex;flex-direction:column;background:var(--panel);
+    border-radius:18px 18px 0 0;margin-top:-16px;z-index:8;position:relative;
+    border-top:1px solid rgba(255,255,255,.08);
+    box-shadow:0 -20px 40px -20px rgba(0,0,0,.8);
+  }
+  .grabzone{height:24px;display:flex;align-items:center;justify-content:center;cursor:grab;
+    flex:0 0 auto;touch-action:none;position:relative;margin-top:2px}
+  .grabzone:active{cursor:grabbing}
+  .grab{width:38px;height:5px;border-radius:3px;background:#2E3846;
+    transition:background .18s,width .18s}
+  .grabzone:hover .grab{background:#3DDC97;width:50px}
+  .mapwrap.compact .mctl,.mapwrap.compact .follow{display:none}
+  .mapwrap.compact .maptag{font-size:9px;bottom:8px}
+  .chips{display:flex;align-items:center;gap:8px;padding:4px 16px 8px;flex:0 0 auto;
+    border-bottom:1px solid rgba(35,44,57,.7)}
+  .chip{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);
+    color:var(--t2);white-space:nowrap}
+  .chip.on{background:var(--t1);color:#0A0F14;border-color:var(--t1);font-weight:700}
+  .chip.warn{border-color:rgba(255,180,84,.4);color:var(--warn);background:rgba(255,180,84,.07)}
+  .grow{flex:1}
+  .cnt{font-size:9px;color:var(--t3)}
+  .seeall{font-size:12px;color:var(--accent);font-weight:700;text-decoration:none;white-space:nowrap}
+
+  .selmode .tile::after{content:"";position:absolute;right:5px;top:5px;width:17px;height:17px;
+    border-radius:50%;border:1.5px solid rgba(255,255,255,.9);background:rgba(0,0,0,.4);z-index:4}
+  .selmode .tile.on::after{background:var(--accent);border-color:var(--accent)}
+  .selmode .tile.on::before{content:"✓";position:absolute;right:5px;top:5px;width:17px;height:17px;
+    display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;
+    color:#04170F;z-index:5}
+  .selmode .tile.on{outline:2px solid var(--accent);outline-offset:-2px}
+
+
+  .selbar{position:absolute;left:0;right:0;bottom:56px;z-index:70;display:none;align-items:center;
+    gap:8px;padding:10px 14px;background:rgba(12,17,23,.97);
+    border-top:1px solid var(--line);backdrop-filter:blur(12px)}
+  .selbar.show{display:flex}
+  .selbar .n{font-size:12px;color:var(--t2)}
+  .selbar .sp{flex:1}
+  .selbar button{height:32px;padding:0 12px;border-radius:9px;font-family:inherit;font-size:11px;
+    font-weight:600;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--t2)}
+  .selbar button.danger{background:rgba(255,122,138,.14);border-color:rgba(255,122,138,.5);color:#FF7A8A}
+
+  .list{flex:1;overflow-y:auto;overscroll-behavior:contain;position:relative;
+    scrollbar-width:none}
+  .list::-webkit-scrollbar{display:none}
+  .datehead{
+    display:flex;align-items:center;justify-content:space-between;padding:8px 16px 8px;
+    font-size:12px;font-weight:700;position:sticky;top:0;z-index:3;
+    background:linear-gradient(180deg,var(--panel) 72%,rgba(15,20,27,0));
+  }
+  .datehead em{font-style:normal;font-size:9px;color:var(--t3);font-weight:400}
+  .datehead.on span{color:var(--accent)}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:0 2px 8px}
+  .tile{position:relative;aspect-ratio:1/1;overflow:hidden;cursor:pointer;
+    transition:filter .15s}
+  .tile .dots{position:absolute;left:6px;top:6px;display:flex;gap:4px;z-index:3}
+  .tile .dots i{width:8px;height:8px;border-radius:50%;display:block;
+    box-shadow:0 0 0 1px rgba(0,0,0,.55)}
+  .tile .dots .kc{background:#FFB454}
+  .tile .dots .kf{background:#3DDC97}
+  .tile .dots .kn{background:#A78BFA}
+
+  .tile:active{filter:brightness(.75)}
+
+  /* ---------- 假照片场景 ---------- */
+  .stack i.scene,.single.scene{position:relative}
+
+  /* ---------- 灯箱 ---------- */
+  .lb.show{display:flex}
+
+  .toast{
+    position:absolute;left:50%;top:58px;transform:translateX(-50%);z-index:12;
+    background:rgba(10,15,20,.9);border:1px solid rgba(61,220,151,.35);color:#CFEFE1;
+    padding:8px 12px;border-radius:9px;font-size:12px;white-space:nowrap;
+    backdrop-filter:blur(10px);opacity:1;transition:opacity .6s;pointer-events:none;
+  }
+  .toast.hide{opacity:0}
+
+  .hint{font-size:12px;color:#4E5866;letter-spacing:.02em;text-align:center;padding:0 16px}
+
+  /* 底部主导航（常驻） */
+  .tabbar{height:56px;flex:0 0 56px;display:flex;border-top:1px solid var(--line);
+    background:rgba(10,14,19,.97);z-index:50;position:relative}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    font-size:9px;color:var(--t3);text-decoration:none}
+  .tab.on{color:var(--accent)}
+  .tab i{width:15px;height:15px;border:1.4px solid currentColor;border-radius:5px;display:block}
+  @media(max-width:780px){
+    .stage{padding:0;gap:0}
+    .device{height:100vh;width:100vw;aspect-ratio:auto;border-radius:0;border:none;box-shadow:none}
+    .hint{display:none}
+  }
+</style>
+<script src="theme.js"></script>
+</head>
+<body>
+<div class="stage">
+  <div class="device">
+    <div class="app">
+
+      <div class="mapwrap" id="mapwrap">
+        <svg id="terrain" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="baseG" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#0A1A21"/><stop offset="1" stop-color="#071117"/>
+            </linearGradient>
+            <radialGradient id="glowG" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stop-color="#17414A" stop-opacity=".55"/>
+              <stop offset="1" stop-color="#17414A" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <rect x="-800" y="-800" width="2600" height="2600" fill="url(#baseG)"/>
+          <circle cx="300" cy="380" r="430" fill="url(#glowG)"/>
+          <circle cx="700" cy="660" r="360" fill="url(#glowG)"/>
+
+          <g fill="#0E242B" stroke="rgba(120,190,200,.09)" stroke-width="1">
+            <path d="M-60 110 C 120 30, 300 60, 420 150 C 520 226, 470 330, 360 372 C 250 414, 80 392, -30 300 Z"/>
+            <path d="M700 -50 C 870 10, 1000 120, 970 270 C 946 396, 820 430, 720 366 C 616 300, 612 110, 700 -50 Z"/>
+            <path d="M-70 620 C 100 560, 265 595, 345 700 C 428 808, 360 908, 215 946 C 80 980, -50 890, -70 620 Z"/>
+            <path d="M620 730 C 760 690, 900 726, 962 826 C 1002 902, 920 982, 798 962 C 676 942, 596 848, 620 730 Z"/>
+          </g>
+
+          <path d="M556 246 C 640 276, 692 382, 670 502 C 650 616, 578 686, 518 664 C 458 642, 438 540, 454 442 C 470 344, 498 226, 556 246 Z"
+                fill="#0B2A34" stroke="rgba(90,200,215,.22)" stroke-width="1.5"/>
+
+          <g fill="none" stroke="rgba(110,190,200,.11)" stroke-width="1.2">
+            <path d="M250 250 C 340 268, 392 330, 380 396 C 366 470, 288 502, 226 466 C 164 430, 152 340, 190 288 C 210 262, 226 246, 250 250 Z"/>
+            <path d="M232 278 C 306 292, 350 340, 342 392 C 332 450, 272 474, 226 448 C 178 420, 170 348, 198 306 C 212 286, 220 276, 232 278 Z"/>
+            <path d="M214 306 C 272 318, 306 352, 300 388 C 292 430, 250 446, 220 428 C 186 408, 180 356, 200 326 C 206 316, 208 306, 214 306 Z"/>
+            <path d="M640 700 C 720 716, 762 782, 742 838 C 720 900, 640 920, 588 882 C 534 842, 540 760, 588 722 C 606 708, 620 698, 640 700 Z"/>
+            <path d="M664 730 C 726 742, 756 792, 742 832 C 726 878, 668 892, 630 864 C 590 834, 596 774, 630 748 C 642 738, 652 728, 664 730 Z"/>
+          </g>
+
+          <g fill="none" stroke="rgba(200,222,232,.10)" stroke-width="2">
+            <path d="M30 830 C 190 770, 320 706, 432 642 S 604 520, 700 432 S 822 302, 902 216"/>
+            <path d="M110 190 C 246 296, 372 420, 466 556 S 556 762, 618 906"/>
+            <path d="M356 318 C 432 380, 470 470, 470 560 S 520 700, 620 748"/>
+          </g>
+          <path d="M272 742 C 340 690, 400 652, 468 616 S 590 520, 642 468" fill="none"
+                stroke="rgba(61,220,151,.22)" stroke-width="3.5" stroke-linecap="round"/>
+
+          <g id="maplabels" fill="rgba(200,225,232,.44)" font-size="19" letter-spacing="2.5" font-family="sans-serif">
+            <text x="246" y="782">大理</text>
+            <text x="586" y="486">洱海</text>
+            <text x="690" y="438">双廊</text>
+            <text x="322" y="290">沙溪</text>
+            <text x="168" y="556">苍山</text>
+            <text x="726" y="726">凤仪</text>
+          </g>
+        </svg>
+
+        <div class="markers" id="markers"></div>
+
+        <div class="mtop">
+          <div class="pillwrap">
+            <button class="pill" id="tripBtn"><span id="tripName">—</span><i class="car">▾</i></button>
+            <div class="tripmenu" id="tripMenu"></div>
+          </div>
+          <div class="mbtn" id="btnReset">复位</div>
+        </div>
+
+        <div class="follow" id="follow">10月2日 · 地图已跟随</div>
+        <div class="toast" id="toast">滚动下方时间轴，地图会跟着走</div>
+        <div class="mctl">
+          <button id="zin" aria-label="放大">+</button>
+          <button id="zout" aria-label="缩小">−</button>
+          <a class="mctl-go" href="timeline-page.html" aria-label="精选展板">›</a>
+        </div>
+        <div class="maptag">示意底图 · 正式版接入腾讯位置服务</div>
+      </div>
+
+      <div class="sheet">
+        <div class="grabzone" id="grabzone"><div class="grab"></div></div>
+        <div class="list" id="list"></div>
+      </div>
+
+      <div class="selbar" id="selbar">
+        <span class="n" id="selN">已选 0 张</span>
+        <span class="sp"></span>
+        <button id="selFeat">加入精选</button>
+        <button class="danger" id="selDel">删除</button>
+        <button id="selCancel">取消</button>
+      </div>
+
+      <div class="tabbar">
+        <a class="tab" href="trips.html"><i></i>行程</a>
+        <a class="tab" href="footprint.html"><i></i>地图</a>
+      </div>
+
+    </div>
+  </div>
+  <p class="hint">拖动小横条：上滑展开时间轴 · 下滑放大地图 · 一直上滑进入全屏时间轴 ／ 滚轮缩放 · 点气泡跳到那一天</p>
+</div>
+
+<script src="data.js"></script>
+<script src="lightbox.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var TRIP = getTrip(q('trip'));
+  var DAYS = TRIP.dates.map(function(d, i){
+    return {id:'d' + i, label:d.label, place:d.place, x:d.x, y:d.y, n:d.n};
+  });
+  var TOTAL = DAYS.reduce(function(a, d){ return a + d.n; }, 0);
+
+  /* 行程名 / 数量 / 地名，全部来自 data.js */
+  document.getElementById('tripName').textContent = TRIP.name;
+
+  /* 行程切换 */
+  (function tripSwitch(){
+    var btn = document.getElementById('tripBtn');
+    var menu = document.getElementById('tripMenu');
+    if(!btn || !menu) return;
+
+    menu.innerHTML = TRIPS.map(function(t){
+      return '<div class="ti' + (t.id === TRIP.id ? ' on' : '') + '" data-id="' + t.id + '">' +
+             '<span class="ck">' + (t.id === TRIP.id ? '✓' : '') + '</span>' + t.name + '</div>';
+    }).join('');
+
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      menu.classList.toggle('show');
+    });
+    menu.addEventListener('click', function(e){
+      e.stopPropagation();
+      var it = e.target.closest('.ti');
+      if(!it) return;
+      if(it.dataset.id === TRIP.id){ menu.classList.remove('show'); return; }
+      location.href = 'c1-prototype.html?trip=' + it.dataset.id;
+    });
+    document.addEventListener('click', function(){ menu.classList.remove('show'); });
+  })();
+  (function renderLabels(){
+    var g = document.getElementById('maplabels');
+    if(!g) return;
+    g.innerHTML = '';
+    TRIP.labels.forEach(function(l){
+      var t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', l.x);
+      t.setAttribute('y', l.y);
+      t.textContent = l.t;
+      g.appendChild(t);
+    });
+  })();
+  var SCENES = ['sc1','sc2','sc3','sc4','sc5','sc6','sc7','sc8'];
+  var ARS = ['4 / 3','3 / 2','16 / 9','1 / 1','9 / 16'];
+
+  var photos = [];
+  var pid = 0;
+  DAYS.forEach(function(d, di){
+    for(var i=0;i<d.n;i++){
+      var a = Math.random()*Math.PI*2;
+      var r = Math.pow(Math.random(),0.65) * 62;
+      photos.push({
+        id:'p'+(pid++), day:d.id,
+        x: d.x + Math.cos(a)*r,
+        y: d.y + Math.sin(a)*r*0.82,
+        sc: SCENES[(di*3 + i)%SCENES.length],
+        ar: ARS[(di + i) % ARS.length]
+      });
+    }
+  });
+
+  var mapwrap = document.getElementById('mapwrap');
+  var terrain = document.getElementById('terrain');
+  var layer   = document.getElementById('markers');
+  var list    = document.getElementById('list');
+  var follow  = document.getElementById('follow');
+
+  var W = 0, H = 0;
+  var view = {s:1, tx:0, ty:0};
+  var clusters = [];
+  var lastClusterS = -1;
+  var anim = null; // 旧变量名保留占位，已改由 animTimer 驱动
+  var suppress = false;
+  var currentDay = null;
+
+  function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+
+  function applyTransform(){
+    terrain.style.transform = 'translate3d('+view.tx+'px,'+view.ty+'px,0) scale('+view.s+')';
+    for(var i=0;i<clusters.length;i++){
+      var c = clusters[i];
+      if(!c.el) continue;
+      c.el.style.transform = 'translate3d('+(c.x*view.s+view.tx)+'px,'+(c.y*view.s+view.ty)+'px,0) translate(-50%,-50%)';
+    }
+  }
+
+  function fitView(animate){
+    if(!W || !H) return;
+    var minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
+    for(var i=0;i<photos.length;i++){
+      var p=photos[i];
+      if(p.x<minx)minx=p.x; if(p.x>maxx)maxx=p.x;
+      if(p.y<miny)miny=p.y; if(p.y>maxy)maxy=p.y;
+    }
+    var pad = 70 + Math.max(0, DAYS.length - 4) * 16;
+    minx-=pad; miny-=pad; maxx+=pad; maxy+=pad;
+    var s = clamp(Math.min(W/(maxx-minx), H/(maxy-miny)), 0.42, 2.4);
+    var tx = W/2 - (minx+maxx)/2*s;
+    var ty = H/2 - (miny+maxy)/2*s;
+    if(animate){ animateTo({s:s,tx:tx,ty:ty}, 520); }
+    else { view.s=s; view.tx=tx; view.ty=ty; lastClusterS=-1; recluster(true); applyTransform(); }
+  }
+
+  function dominantDay(items){
+    var cnt = {};
+    for(var i=0;i<items.length;i++){ cnt[items[i].day]=(cnt[items[i].day]||0)+1; }
+    var best=null, bn=-1;
+    for(var k in cnt){ if(cnt[k]>bn){ bn=cnt[k]; best=k; } }
+    return best;
+  }
+  function shortName(dayId){
+    var d = DAYS.filter(function(x){return x.id===dayId;})[0];
+    if(!d) return '';
+    return d.place.split(' · ')[0];
+  }
+
+  function recluster(force){
+    if(!force && lastClusterS>0 && Math.abs(view.s-lastClusterS)/lastClusterS < 0.08) return;
+    lastClusterS = view.s;
+
+    var cell = 88 / view.s;
+    var map = {};
+    for(var i=0;i<photos.length;i++){
+      var p = photos[i];
+      var k = Math.floor(p.x/cell)+'_'+Math.floor(p.y/cell);
+      var c = map[k];
+      if(!c){ c = {x:0,y:0,items:[]}; map[k]=c; }
+      c.x += p.x; c.y += p.y; c.items.push(p);
+    }
+
+    clusters = [];
+    for(var kk in map){
+      var cc = map[kk];
+      clusters.push({x:cc.x/cc.items.length, y:cc.y/cc.items.length, items:cc.items, el:null});
+    }
+    renderClusters();
+  }
+
+  function renderClusters(){
+    layer.innerHTML = '';
+    var frag = document.createDocumentFragment();
+
+    clusters.forEach(function(c){
+      var el = document.createElement('div');
+      el.className = 'mk';
+
+      if(c.items.length === 1 && view.s > 3.2){
+        var p = c.items[0];
+        var inner = document.createElement('div');
+        inner.className = 'single scene ' + p.sc;
+        inner.innerHTML = '<span class="sun"></span><span class="hill"></span><span class="hill2"></span>';
+        el.appendChild(inner);
+        el.addEventListener('click', function(ev){ ev.stopPropagation(); openLightbox(p); });
+      } else {
+        var box = document.createElement('div');
+        box.className = 'cluster';
+        var stack = '<span class="stack">';
+        var take = Math.min(3, c.items.length);
+        for(var j=0;j<take;j++){
+          stack += '<i class="scene '+c.items[j].sc+'"><span class="sun"></span><span class="hill"></span></i>';
+        }
+        stack += '</span>';
+        var dd = dominantDay(c.items);
+        var nm = c.items.length >= 5 ? shortName(dd) : '';
+        box.innerHTML = stack + '<span class="num">'+(nm?'<b>'+nm+'</b>':'')+'<small>'+c.items.length+' 张</small></span>';
+        el.appendChild(box);
+        el.addEventListener('click', function(ev){
+          ev.stopPropagation();
+          scrollToDay(dd);
+        });
+      }
+
+      c.el = el;
+      frag.appendChild(el);
+    });
+
+    layer.appendChild(frag);
+  }
+
+  var animTimer = null;
+
+  function animateTo(target, dur){
+    if(animTimer){ clearTimeout(animTimer); animTimer = null; }
+    var from = {s:view.s, tx:view.tx, ty:view.ty};
+    var t0 = Date.now();
+    var ease = function(t){ return 1 - Math.pow(1-t,3); };
+    function step(){
+      var k = Math.min(1, (Date.now() - t0) / (dur || 520));
+      var e = ease(k);
+      view.s  = from.s  + (target.s  - from.s )*e;
+      view.tx = from.tx + (target.tx - from.tx)*e;
+      view.ty = from.ty + (target.ty - from.ty)*e;
+      applyTransform();
+      if(k < 1){ animTimer = setTimeout(step, 16); }
+      else { animTimer = null; lastClusterS = -1; recluster(true); applyTransform(); }
+    }
+    animTimer = setTimeout(step, 16);
+  }
+
+  function stopViewAnim(){
+    if(animTimer){ clearTimeout(animTimer); animTimer = null; }
+  }
+
+  function focusDay(dayId, dur){
+    var d = DAYS.filter(function(x){return x.id===dayId;})[0];
+    if(!d) return;
+    var targetS = view.s < 1.4 ? 2.0 : view.s;
+    animateTo({
+      s: targetS,
+      tx: W/2 - d.x*targetS,
+      ty: H/2 - d.y*targetS
+    }, dur || 460);
+    follow.textContent = d.label + ' · 地图已跟随';
+    var heads = list.querySelectorAll('.datehead');
+    for(var i=0;i<heads.length;i++){
+      heads[i].classList.toggle('on', heads[i].parentNode.dataset.day === dayId);
+    }
+  }
+
+  var listTween = null;
+
+  /* 用补间滚，不用 behavior:'smooth' —— 某些环境（预览面板 / WebView）里
+     原生平滑滚动会直接不生效，表现为"点了完全不动" */
+  function tweenListScroll(top, dur){
+    if(listTween){ clearTimeout(listTween); listTween = null; }
+    var maxTop = Math.max(0, list.scrollHeight - list.clientHeight);
+    top = Math.max(0, Math.min(top, maxTop));
+    var from = list.scrollTop, dist = top - from;
+    if(Math.abs(dist) < 1){ list.scrollTop = top; return; }
+    var t0 = Date.now();
+    function step(){
+      var k = Math.min(1, (Date.now() - t0) / (dur || 320));
+      var e = 1 - Math.pow(1 - k, 3);
+      list.scrollTop = from + dist * e;
+      if(k < 1){ listTween = setTimeout(step, 16); } else { listTween = null; }
+    }
+    listTween = setTimeout(step, 16);
+  }
+
+  function scrollToDay(dayId){
+    var sec = list.querySelector('section[data-day="'+dayId+'"]');
+    if(!sec) return;
+    suppress = true;
+    currentDay = dayId;
+    tweenListScroll(sec.offsetTop - 2, 320);
+    focusDay(dayId);
+    waitScrollSettle();
+  }
+
+  /* 等滚动真正停下来再恢复联动，而不是死等固定时长 ——
+     固定时长在长列表上会「动画还没走完就解除屏蔽」，导致联动把地图带偏 */
+  function waitScrollSettle(){
+    var last = list.scrollTop, stable = 0, timer = null;
+    if(timer) clearInterval(timer);
+    timer = setInterval(function(){
+      if(Math.abs(list.scrollTop - last) < 1){
+        stable++;
+        if(stable >= 3){ clearInterval(timer); timer = null; suppress = false; }
+      } else {
+        stable = 0;
+        last = list.scrollTop;
+      }
+    }, 60);
+    setTimeout(function(){
+      if(timer){ clearInterval(timer); timer = null; }
+      suppress = false;
+    }, 2000);
+  }
+
+  /* ---------- 构建时间轴 ---------- */
+  /* 三类标记：判定逻辑在 data.js 的 kindMapOf，这里只负责画点 */
+  var kindMap = kindMapOf(TRIP.id, photos[0] ? photos[0].id : '');
+
+  function kindDots(pid){
+    var ks = kindMap[pid];
+    if(!ks) return '';
+    return '<span class="dots">' + ks.map(function(k){ return '<i class="' + k + '"></i>'; }).join('') + '</span>';
+  }
+
+  (function buildList(){
+    var html = '';
+    DAYS.forEach(function(d){
+      var tiles = photos.filter(function(p){ return p.day===d.id; });
+      html += '<section data-day="'+d.id+'">';
+      html += '<div class="datehead"><span>'+d.label+' · '+d.place+'</span><em>'+tiles.length+' 张</em></div>';
+      html += '<div class="grid">';
+      tiles.forEach(function(p){
+        html += '<div class="tile scene '+p.sc+'" data-id="'+p.id+'">'
+              +   kindDots(p.id)
+              +   '<span class="sun"></span><span class="hill"></span><span class="hill2"></span>'
+              + '</div>';
+      });
+      html += '</div></section>';
+    });
+    list.innerHTML = html;
+  })();
+
+  /* ---------- 交互：滚动联动 ---------- */
+  list.addEventListener('scroll', function(){
+    if(suppress) return;
+    var secs = list.querySelectorAll('section');
+    if(!secs.length) return;
+    var active = secs[0];
+    for(var i=0;i<secs.length;i++){
+      if(secs[i].offsetTop - list.scrollTop <= 70) active = secs[i];
+    }
+    var d = active.dataset.day;
+    if(d !== currentDay){ currentDay = d; focusDay(d, 240); }
+  }, {passive:true});
+
+  /* ---------- 交互：拖动 / 缩放 ---------- */
+  var pts = new Map();
+  var dragging = false;
+  var startX = 0, startY = 0, lastX = 0, lastY = 0;
+  var pinchStart = 0, pinchS = 1, pinchMid = null;
+
+  function relPos(e){
+    var r = mapwrap.getBoundingClientRect();
+    return {x: e.clientX - r.left, y: e.clientY - r.top};
+  }
+
+  mapwrap.addEventListener('pointerdown', function(e){
+    if(e.target.closest('.mctl') || e.target.closest('.mtop')) return;
+    stopViewAnim();
+    var p = relPos(e);
+    pts.set(e.pointerId, p);
+    if(pts.size === 1){
+      startX = lastX = p.x; startY = lastY = p.y; dragging = false;
+    } else if(pts.size === 2){
+      var arr = Array.from(pts.values());
+      pinchStart = Math.hypot(arr[0].x-arr[1].x, arr[0].y-arr[1].y);
+      pinchS = view.s;
+      pinchMid = {x:(arr[0].x+arr[1].x)/2, y:(arr[0].y+arr[1].y)/2};
+    }
+  });
+
+  mapwrap.addEventListener('pointermove', function(e){
+    if(!pts.has(e.pointerId)) return;
+    var p = relPos(e);
+    pts.set(e.pointerId, p);
+
+    if(pts.size >= 2 && pinchStart > 0){
+      var arr = Array.from(pts.values());
+      var dist = Math.hypot(arr[0].x-arr[1].x, arr[0].y-arr[1].y);
+      var ns = clamp(pinchS * (dist/pinchStart), 0.42, 7);
+      var wx = (pinchMid.x - view.tx)/view.s;
+      var wy = (pinchMid.y - view.ty)/view.s;
+      view.s = ns;
+      view.tx = pinchMid.x - wx*ns;
+      view.ty = pinchMid.y - wy*ns;
+      recluster(); applyTransform();
+      return;
+    }
+
+    var dx = p.x - lastX, dy = p.y - lastY;
+    lastX = p.x; lastY = p.y;
+
+    if(!dragging && Math.hypot(p.x-startX, p.y-startY) > 4){
+      dragging = true;
+      mapwrap.classList.add('dragging');
+      try{ mapwrap.setPointerCapture(e.pointerId); }catch(err){}
+    }
+    if(dragging){
+      view.tx += dx; view.ty += dy;
+      applyTransform();
+    }
+  });
+
+  function endPointer(e){
+    pts.delete(e.pointerId);
+    if(pts.size < 2){ pinchStart = 0; }
+    if(pts.size === 0){
+      dragging = false;
+      mapwrap.classList.remove('dragging');
+    }
+  }
+  mapwrap.addEventListener('pointerup', endPointer);
+  mapwrap.addEventListener('pointercancel', endPointer);
+  mapwrap.addEventListener('pointerleave', endPointer);
+
+  mapwrap.addEventListener('wheel', function(e){
+    e.preventDefault();
+    stopViewAnim();
+    var p = relPos(e);
+    var f = Math.exp(-e.deltaY * 0.0014);
+    var ns = clamp(view.s * f, 0.42, 7);
+    var wx = (p.x - view.tx)/view.s;
+    var wy = (p.y - view.ty)/view.s;
+    view.s = ns;
+    view.tx = p.x - wx*ns;
+    view.ty = p.y - wy*ns;
+    recluster(); applyTransform();
+  }, {passive:false});
+
+  function zoomCenter(f){
+    stopViewAnim();
+    var ns = clamp(view.s * f, 0.42, 7);
+    var cx = W/2, cy = H/2;
+    var wx = (cx - view.tx)/view.s;
+    var wy = (cy - view.ty)/view.s;
+    view.s = ns;
+    view.tx = cx - wx*ns;
+    view.ty = cy - wy*ns;
+    recluster(); applyTransform();
+  }
+  document.getElementById('zin').addEventListener('click', function(e){ e.stopPropagation(); zoomCenter(1.45); });
+  document.getElementById('zout').addEventListener('click', function(e){ e.stopPropagation(); zoomCenter(1/1.45); });
+  document.getElementById('btnReset').addEventListener('click', function(e){
+    e.stopPropagation();
+    fitView(true);
+    follow.textContent = '全程 · ' + DAYS.length + ' 天 · ' + TOTAL + ' 张';
+    var heads = list.querySelectorAll('.datehead');
+    for(var i=0;i<heads.length;i++){ heads[i].classList.remove('on'); }
+  });
+
+  /* ---------- 灯箱（改用共享组件 lightbox.js） ---------- */
+
+
+
+  /* 把「第几天」换算成真实日期，供大图里的日期修正使用 */
+  function isoOf(d, days){
+    var start = tripRange(TRIP).split(' - ')[0];
+    var p = String(start).split('.');
+    var idx = 0;
+    for(var i = 0; i < days.length; i++){ if(days[i].id === d.id) idx = i; }
+    var dt = new Date(+p[0], (+p[1]) - 1, +p[2]);
+    dt.setDate(dt.getDate() + idx);
+    return dt.getFullYear() + '-' +
+           String(dt.getMonth() + 1).padStart(2, '0') + '-' +
+           String(dt.getDate()).padStart(2, '0');
+  }
+
+  function openLightbox(p){
+    var d = DAYS.filter(function(x){return x.id===p.day;})[0];
+    Lightbox.open({
+      sc: p.sc,
+      ar: p.ar,
+      meta: {iso: isoOf(d, DAYS), date: d.label, place: d.place},
+      metaKey: 'trip:' + TRIP.id + ':' + p.id,
+      noteKey: 'trip:' + TRIP.id + ':' + p.id,
+      feat: {
+        on: isFeatured(TRIP.id, p.id),
+        toggle: function(){
+          var list = toggleFeatured(TRIP.id, p);
+          var on = false;
+          for(var i = 0; i < list.length; i++){ if(list[i].id === p.id) on = true; }
+          var tile = document.querySelector('.tile[data-id="' + p.id + '"]');
+          if(tile){
+            var hasF = false;
+            var ks = kindMap[p.id] || [];
+            for(var ki = 0; ki < ks.length; ki++){ if(ks[ki] === 'kf') hasF = true; }
+            var dots = tile.querySelector('.dots');
+            if(hasF && !dots){ tile.insertAdjacentHTML('afterbegin', kindDots(p.id)); }
+            else if(!hasF && dots){ dots.parentNode.removeChild(dots); }
+          }
+          return on;
+        }
+      },
+      isCover: (function(){ var c = coverOf(TRIP.id); return !!(c && c.id === p.id); })(),
+      cover: function(){ setCover(TRIP.id, {id: p.id, sc: p.sc}); },
+      onDelete: function(){ deletePhoto(p.id); }
+    });
+  }
+
+  /* 单张删除：从数据与 DOM 都摘掉，并刷新计数 */
+  function deletePhoto(id){
+    var el = document.querySelector('.tile[data-id="' + id + '"]');
+    if(el && el.parentNode) el.parentNode.removeChild(el);
+    photos = photos.filter(function(x){ return x.id !== id; });
+    TOTAL = photos.length;
+    var heads = document.querySelectorAll('.datehead em');
+    for(var h = 0; h < heads.length; h++){
+      var sec = heads[h].closest('section');
+      heads[h].textContent = sec ? sec.querySelectorAll('.tile').length : 0;
+      heads[h].textContent += ' 张';
+    }
+  }
+  /* ---------- 长按多选 ---------- */
+  var selecting = false, picked = {}, pressT = null, longFired = false;
+  var selbar = document.getElementById('selbar');
+  var selN = document.getElementById('selN');
+
+  function enterSel(id){
+    selecting = true; picked = {};
+    list.classList.add('selmode');
+    selbar.classList.add('show');
+    if(id) toggleTile(list.querySelector('.tile[data-id="' + id + '"]'));
+  }
+  function exitSel(){
+    selecting = false; picked = {};
+    list.classList.remove('selmode');
+    selbar.classList.remove('show');
+    var on = list.querySelectorAll('.tile.on');
+    for(var i = 0; i < on.length; i++) on[i].classList.remove('on');
+  }
+  function toggleTile(tile){
+    if(!tile) return;
+    var id = tile.dataset.id;
+    if(picked[id]){ delete picked[id]; tile.classList.remove('on'); }
+    else { picked[id] = 1; tile.classList.add('on'); }
+    selN.textContent = '已选 ' + Object.keys(picked).length + ' 张';
+  }
+
+  list.addEventListener('pointerdown', function(e){
+    var t = e.target.closest('.tile');
+    if(!t || selecting) return;
+    clearTimeout(pressT);
+    pressT = setTimeout(function(){
+      longFired = true;
+      enterSel(t.dataset.id);
+    }, 480);
+  });
+  ['pointerup','pointermove','pointercancel','scroll'].forEach(function(ev){
+    list.addEventListener(ev, function(){ clearTimeout(pressT); }, {passive:true});
+  });
+
+  list.addEventListener('click', function(e){
+    var t = e.target.closest('.tile');
+    if(!t) return;
+    if(longFired){ longFired = false; return; }
+    if(selecting){ toggleTile(t); return; }
+    var p = photos.filter(function(x){ return x.id === t.dataset.id; })[0];
+    if(p) openLightbox(p);
+  });
+
+  document.getElementById('selCancel').addEventListener('click', exitSel);
+
+  document.getElementById('selFeat').addEventListener('click', function(){
+    var ids = Object.keys(picked);
+    if(!ids.length){ Lightbox.toast('先选几张'); return; }
+    ids.forEach(function(id){
+      var p = photos.filter(function(x){ return x.id === id; })[0];
+      if(!p) return;
+      var list0 = featuredOf(TRIP.id);
+      var has = list0.some(function(x){ return x.id === id; });
+      if(!has) toggleFeatured(TRIP.id, {id: p.id, sc: p.sc});
+      var tile = list.querySelector('.tile[data-id="' + id + '"]');
+      if(tile){
+        var dots = tile.querySelector('.dots');
+        if(!dots) tile.insertAdjacentHTML('afterbegin', '<span class="dots"><i class="kf"></i></span>');
+        else if(!dots.querySelector('.kf')) dots.insertAdjacentHTML('beforeend', '<i class="kf"></i>');
+      }
+    });
+    Lightbox.toast('已加入精选 ' + ids.length + ' 张');
+    exitSel();
+  });
+
+  document.getElementById('selDel').addEventListener('click', function(){
+    var ids = Object.keys(picked);
+    if(!ids.length){ Lightbox.toast('先选几张'); return; }
+    Lightbox.confirm({
+      title: '删除这 ' + ids.length + ' 张照片？',
+      desc: '只从这次行程里移除<br>原图仍在系统相册',
+      okText: '删除',
+      onOk: function(){
+        ids.forEach(function(id){
+          var tile = list.querySelector('.tile[data-id="' + id + '"]');
+          if(tile && tile.parentNode) tile.parentNode.removeChild(tile);
+          photos = photos.filter(function(x){ return x.id !== id; });
+        });
+        TOTAL = photos.length;
+        Lightbox.toast('已移除 ' + ids.length + ' 张');
+        exitSel();
+      }
+    });
+  });
+
+  /* ---------- 抽屉：拖动小横条调整地图高度 ---------- */
+  var appEl = document.querySelector('.app');
+  var grabzone = document.getElementById('grabzone');
+  var appH = 0, mapH = 0, gDrag = null;
+
+  function setMapH(px){
+    var oldH = H;
+    mapH = px;
+    mapwrap.style.height = px + 'px';
+    H = mapwrap.clientHeight;
+    view.ty += (H - oldH) / 2;
+    mapwrap.classList.toggle('compact', px < appH * 0.26);
+    applyTransform();
+  }
+
+  var mapHAnim = null;
+
+  function animateMapH(target, dur){
+    if(mapHAnim){ clearTimeout(mapHAnim); mapHAnim = null; }
+    var from = mapH, t0 = Date.now();
+    function step(){
+      var k = Math.min(1, (Date.now() - t0) / (dur || 300));
+      var e = 1 - Math.pow(1 - k, 3);
+      setMapH(from + (target - from) * e);
+      if(k < 1){ mapHAnim = setTimeout(step, 16); }
+      else { mapHAnim = null; }
+    }
+    mapHAnim = setTimeout(step, 16);
+  }
+
+  function stopMapHAnim(){
+    if(mapHAnim){ clearTimeout(mapHAnim); mapHAnim = null; }
+  }
+
+  function snapPoints(){ return [appH * 0.78, appH * 0.46, appH * 0.18]; }
+
+  function snapTo(px){
+    var arr = snapPoints(), best = arr[0], bd = 1e9;
+    for(var i = 0; i < arr.length; i++){
+      var d = Math.abs(arr[i] - px);
+      if(d < bd){ bd = d; best = arr[i]; }
+    }
+    animateMapH(best, 300);
+  }
+
+  grabzone.addEventListener('pointerdown', function(e){
+    try{ grabzone.setPointerCapture(e.pointerId); }catch(err){}
+    stopMapHAnim();
+    gDrag = {y0: e.clientY, h0: mapH, moved: false};
+  });
+  grabzone.addEventListener('pointermove', function(e){
+    if(!gDrag) return;
+    var dy = e.clientY - gDrag.y0;
+    if(Math.abs(dy) > 3) gDrag.moved = true;
+    setMapH(clamp(gDrag.h0 + dy, appH * 0.15, appH * 0.80));
+  });
+  function gEnd(e){
+    if(!gDrag) return;
+    var moved = gDrag.moved;
+    gDrag = null;
+    if(!moved){
+      animateMapH(mapH > appH * 0.6 ? appH * 0.46 : appH * 0.78, 320);
+      return;
+    }
+    snapTo(mapH);
+  }
+  grabzone.addEventListener('pointerup', gEnd);
+  grabzone.addEventListener('pointercancel', function(){ gDrag = null; });
+
+  /* ---------- 尺寸 ---------- */
+  function measure(){
+    W = mapwrap.clientWidth;
+    H = mapwrap.clientHeight;
+  }
+  function boot(){
+    appH = appEl.clientHeight;
+    mapwrap.style.height = (appH * 0.46) + 'px';
+    measure();
+    mapH = mapwrap.clientHeight;
+    mapwrap.classList.toggle('compact', mapH < appH * 0.26);
+    fitView(false);
+    currentDay = 'd1';
+    follow.textContent = '全程 · ' + DAYS.length + ' 天 · ' + TOTAL + ' 张';
+    var toast = document.getElementById('toast');
+    setTimeout(function(){ toast.classList.add('hide'); }, 4200);
+  }
+  window.addEventListener('resize', function(){
+    var oldW = W, oldH = H;
+    appH = appEl.clientHeight;
+    mapH = clamp(mapH, appH * 0.10, appH * 0.82);
+    mapwrap.style.height = mapH + 'px';
+    measure();
+    view.tx += (W - oldW) / 2;
+    view.ty += (H - oldH) / 2;
+    applyTransform();
+  });
+
+  if(document.readyState === 'complete' || document.readyState === 'interactive'){
+    setTimeout(boot, 30);
+  } else {
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(boot, 30); });
+  }
+})();
+</script>
+<script src="nav.js"></script>
+<script src="statusbar.js"></script>
+</body>
+</html>

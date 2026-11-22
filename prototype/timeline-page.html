@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>行程详情 · 全部时间轴</title>
+<link rel="stylesheet" href="scenes.css">
+<style>
+  :root{
+    --bg:#05080B; --panel:#0F141B; --panel2:#141A23; --line:#232C39;
+    --t1:#E9EEF6; --t2:#8C97A9; --t3:#5C6675;
+    --accent:#3DDC97; --warn:#FFB454; --info:#6C8CFF; --rose:#FF7A8A; --quote:#D9C48A;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--t1);overflow:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif}
+  .stage{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px 0}
+  .device{height:min(880px,92vh);aspect-ratio:420/880;border-radius:40px;overflow:hidden;
+    border:1px solid #2A3341;background:#0A0F14;position:relative;
+    box-shadow:0 40px 90px -40px #000,0 0 0 7px #05080B}
+  .app{height:100%;display:flex;flex-direction:column;background:var(--panel)}
+
+  /* 头部 */
+  .head{height:54px;flex:0 0 54px;display:flex;align-items:center;gap:8px;padding:0 16px;
+    border-bottom:1px solid var(--line);background:rgba(15,20,27,.96)}
+  .back{width:32px;height:32px;border-radius:10px;border:1px solid var(--line);background:transparent;
+    color:var(--t2);font-size:15px;text-decoration:none;display:flex;align-items:center;justify-content:center;
+    flex:0 0 32px}
+  .back:active{color:var(--accent);border-color:rgba(61,220,151,.5)}
+  .ht{flex:1;min-width:0}
+  .ht b{display:block;font-size:15px;font-weight:600;letter-spacing:-.2px;
+    line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ht span{display:block;font-size:9px;color:var(--t3);margin-top:4px;line-height:1.3;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hbtn{width:30px;height:30px;border-radius:9px;border:1px solid var(--line);background:transparent;
+    color:var(--t2);font-size:12px;display:flex;align-items:center;justify-content:center}
+
+  /* 概览卡 */
+  .ov{display:flex;flex-direction:column;gap:12px;padding:12px 16px 12px;flex:0 0 auto;
+    border-bottom:1px solid rgba(35,44,57,.7)}
+  .ovtop{display:flex;gap:12px;align-items:center}
+  .ovmap{width:96px;height:96px;flex:0 0 96px;border-radius:12px;overflow:hidden;
+    position:relative;border:1px solid var(--line);background:#08131A}
+  .ovstats{flex:1;display:flex;align-items:center;min-width:0}
+  .st{flex:1 1 0;text-align:center;position:relative;min-width:0;overflow:hidden}
+  .st+.st::before{content:"";position:absolute;left:0;top:14%;height:72%;width:1px;background:var(--line)}
+  .st b{display:block;font-size:15px;font-weight:600;letter-spacing:-.4px;font-variant-numeric:tabular-nums}
+  .st span{display:block;font-size:9px;color:var(--t3);margin-top:4px}
+  .jn{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-radius:11px;
+    background:var(--panel2);border:1px solid var(--line);text-decoration:none}
+  .jn:active{background:rgba(255,255,255,.05)}
+  .jn .jt{font-size:9px;font-weight:600;color:var(--t3);flex:0 0 auto;padding-top:1px;letter-spacing:.04em}
+  .jn .jx{flex:1;min-width:0;font-size:12px;line-height:1.65;color:var(--t2);font-style:italic;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .jn .jx.dim{color:var(--t3);font-style:normal}
+  .jn .ja{color:var(--t3);font-size:15px;line-height:1.1;flex:0 0 auto}
+  .ovmap svg{display:block;width:100%;height:100%}
+  .ovmap .ovempty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+    text-align:center;padding:8px;font-size:9px;line-height:1.6;color:var(--t3)}
+  .ovmap.empty .ovempty{display:flex}
+  .ovmap.empty #ovsvg{opacity:.25}
+  .ovinfo{flex:1;min-width:0}
+  .ovinfo .row{display:flex;align-items:baseline;gap:4px;margin-bottom:8px}
+  .ovinfo .row:last-child{margin-bottom:0}
+  .num{font-size:15px;font-weight:600;letter-spacing:-.5px}
+  .num.sm{font-size:15px}
+  .unit{font-size:9px;color:var(--t3)}
+  .ovinfo .line{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+  .ovday{font-size:9px;color:var(--t3);margin-top:8px;line-height:1.7}
+  .ovday b{color:var(--accent);font-weight:600}
+
+  /* 日期条 */
+  .dims{display:flex;align-items:center;gap:2px;padding:8px 16px 0;flex:0 0 auto}
+  .dims .dim{background:none;border:none;color:var(--t3);font-size:12px;padding:4px 8px;
+    border-radius:6px;font-family:inherit;cursor:pointer}
+  .dims .dim.on{color:var(--accent);background:rgba(61,220,151,.1)}
+  .dims .sep{width:1px;height:10px;background:var(--line);margin:0 4px}
+
+  /* 日期 chip 里的天气 */
+  .chip svg.ci{width:11px;height:11px;vertical-align:-2px;margin-right:4px;
+    stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .chip .tp{font-weight:600;margin-left:4px;opacity:.72}
+
+  /* 手记块 */
+  .jnote{padding:12px 16px 12px;flex:0 0 auto}
+  .jlbl{display:flex;align-items:center;font-size:9px;color:var(--t3);margin-bottom:6px}
+  .jsave{margin-left:auto;opacity:.7}
+  .jwrap{position:relative}
+  .jb{font-size:12px;line-height:1.8;color:#B9C3D0;border-radius:10px;padding:8px 10px;
+    background:var(--panel2);max-height:144px;overflow-y:auto;outline:none;
+    scrollbar-width:none;min-height:72px}
+  .jb::-webkit-scrollbar{display:none}
+  .jb:focus{outline:1px solid rgba(61,220,151,.4)}
+  .jb.ph{color:#7C8796;font-style:italic}
+  .jmore{position:absolute;right:6px;bottom:6px;width:0;height:0;padding:0;border:0;
+    background:transparent;cursor:pointer;
+    border-left:9px solid transparent;border-bottom:9px solid rgba(61,220,151,.45)}
+  .jmore:hover{border-bottom-color:rgba(61,220,151,.8)}
+  .jless{position:absolute;right:6px;bottom:6px;width:0;height:0;padding:0;border:0;
+    background:transparent;cursor:pointer;
+    border-top:11px solid rgba(61,220,151,.55);
+    border-right:11px solid transparent}
+  .jless:hover{border-top-color:rgba(61,220,151,.9)}
+  .jb.open{max-height:none;overflow:visible}
+
+  /* 三类展板角标 */
+  .tile .dots{position:absolute;left:6px;top:6px;display:flex;gap:4px;z-index:3}
+  .tile .dots i{width:8px;height:8px;border-radius:50%;display:block;
+    box-shadow:0 0 0 1px rgba(0,0,0,.55)}
+  .tile .dots .kc{background:#FFB454}
+  .tile .dots .kf{background:#3DDC97}
+  .tile .dots .kn{background:#A78BFA}
+
+  /* 展板空态 */
+  .exempty{margin:8px 16px 20px;padding:28px 20px;border-radius:14px;background:var(--panel2);
+    text-align:center;font-size:12px;line-height:1.9;color:var(--t3)}
+  .exempty b{display:block;font-size:13px;color:var(--t2);margin-bottom:6px;font-weight:600}
+
+  .days{display:flex;gap:8px;padding:8px 16px;overflow-x:auto;flex:0 0 auto;
+    border-bottom:1px solid rgba(35,44,57,.7);scrollbar-width:none;
+    cursor:grab;user-select:none;-webkit-user-select:none}
+  .days.dragging{cursor:grabbing}
+  .days::-webkit-scrollbar{display:none}
+  .chip{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);
+    color:var(--t2);white-space:nowrap;flex:0 0 auto;transition:background .16s,color .16s}
+  .chip.on{background:var(--t1);color:#0A0F14;border-color:var(--t1);font-weight:700}
+  .chip:active{transform:scale(.97)}
+
+  /* 图墙 */
+  .scroll{flex:1;overflow-y:auto;position:relative;scrollbar-width:none}
+  .scroll::-webkit-scrollbar{display:none}
+  .datehead{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;
+    font-size:12px;font-weight:600;position:sticky;top:0;z-index:3;
+    background:linear-gradient(180deg,var(--panel) 74%,rgba(15,20,27,0))}
+  .datehead em{font-style:normal;font-size:9px;color:var(--t3);font-weight:400}
+  .datehead .wi{width:18px;height:18px;vertical-align:-3px;margin-left:8px;opacity:.8;
+    stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .datehead b{font-size:15px;font-weight:600;color:var(--t3);margin-left:5px}
+  .expbtn{margin-left:auto;height:24px;padding:0 10px;border-radius:8px;font-family:inherit;
+    font-size:9px;cursor:pointer;color:var(--t3);background:transparent;
+    border:1px solid var(--line)}
+  .expbtn:active{color:var(--accent);border-color:rgba(61,220,151,.45)}
+  .datehead.on span{color:var(--accent)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:0 2px 12px}
+  .tile{position:relative;aspect-ratio:1/1;overflow:hidden;cursor:pointer}
+  .tile .bm{display:none;position:absolute;left:4px;top:4px;width:11px;height:15px;
+    background:var(--accent);clip-path:polygon(0 0,100% 0,100% 100%,50% 74%,0 100%);
+    z-index:3;box-shadow:0 1px 5px rgba(0,0,0,.55)}
+  .tile.bm-on .bm{display:block}
+  .tile:active{filter:brightness(.72)}
+
+  /* 假照片 */
+
+  /* 灯箱 */
+  .lb.show{display:flex}
+
+
+  /* 编辑行程信息 */
+  .editsheet{position:absolute;inset:0;z-index:85;display:none;align-items:center;
+    justify-content:center;padding:24px;background:rgba(3,6,9,.75);backdrop-filter:blur(5px)}
+  .editsheet.show{display:flex}
+  .ecard{width:100%;background:var(--panel2);border-radius:16px;padding:18px 16px 14px;
+    border:1px solid rgba(255,255,255,.1)}
+  .ecard .eh{font-size:15px;font-weight:600;margin-bottom:14px}
+  .erow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .erow span{flex:0 0 68px;font-size:12px;color:var(--t3)}
+  .erow input{flex:1;min-width:0;height:34px;border-radius:9px;border:1px solid var(--line);
+    background:var(--panel);color:var(--t1);font-size:12px;padding:0 10px;
+    font-family:inherit;outline:none}
+  .erow input:focus{border-color:rgba(61,220,151,.45)}
+  .efoot{display:flex;gap:8px;margin-top:14px}
+  .efoot button{flex:1;height:38px;border-radius:10px;font-family:inherit;font-size:12px;
+    cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--t2)}
+  .efoot .ok{background:var(--accent);border-color:var(--accent);color:#04170F;font-weight:600}
+
+  /* 选择模式 */
+  .selmode .tile::after{content:"";position:absolute;right:5px;top:5px;width:17px;height:17px;
+    border-radius:50%;border:1.5px solid rgba(255,255,255,.9);background:rgba(0,0,0,.4);z-index:2}
+  .selmode .tile.on::after{background:var(--accent);border-color:var(--accent)}
+  .selmode .tile.on::before{content:"✓";position:absolute;right:5px;top:5px;width:17px;height:17px;
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
+    color:#04170F;z-index:3}
+  .selmode .tile.on{outline:2px solid var(--accent);outline-offset:-2px}
+
+  .selbar{position:absolute;left:0;right:0;bottom:0;z-index:70;display:none;align-items:center;gap:8px;
+    padding:12px 16px;background:rgba(12,17,23,.97);border-top:1px solid var(--line);
+    backdrop-filter:blur(12px)}
+  .selbar.show{display:flex}
+  .selbar .n{font-size:12px;color:var(--t2)}
+  .selbar .sp{flex:1}
+  .selbar button{height:32px;padding:0 12px;border-radius:9px;font-family:inherit;font-size:12px;
+    font-weight:600;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--t2)}
+  .selbar button.danger{background:rgba(255,122,138,.14);border-color:rgba(255,122,138,.5);color:#FF7A8A}
+  .selbar button.solid{background:var(--t1);color:#0A0F14;border-color:var(--t1)}
+
+  /* 动作面板 */
+  .msheet{position:absolute;inset:0;z-index:80;display:none;align-items:flex-end;
+    background:rgba(3,6,9,.72);backdrop-filter:blur(4px)}
+  .msheet.show{display:flex}
+  .mcard{width:100%;background:var(--panel2);border-radius:18px 18px 0 0;
+    border-top:1px solid rgba(255,255,255,.1);padding:8px 0 20px;
+    transform:translateY(100%);transition:transform .26s ease-out}
+  .msheet.show .mcard{transform:translateY(0)}
+  .mcard .mh{text-align:center;font-size:12px;color:var(--t3);padding:8px 0 8px}
+  .mcard .mi{display:flex;align-items:center;gap:8px;padding:16px 16px;font-size:12px;
+    color:var(--t1);cursor:pointer;border-bottom:1px solid rgba(35,44,57,.55)}
+  .mcard .mi:last-child{border-bottom:none}
+  .mcard .mi:active{background:rgba(255,255,255,.04)}
+  .mcard .mi .em{width:20px;text-align:center;font-size:15px}
+  .mcard .mi.danger{color:#FF7A8A}
+  .mcard .mi.cancel{justify-content:center;color:var(--t3);font-size:12px;margin-top:8px;
+    border-top:6px solid rgba(255,255,255,.03)}
+
+  .hint{font-size:12px;color:#4E5866;text-align:center;padding:0 16px}
+  @media(max-width:780px){
+    .stage{padding:0;gap:0}
+    .device{height:100vh;width:100vw;aspect-ratio:auto;border-radius:0;border:none;box-shadow:none}
+    .hint{display:none}
+  }
+</style>
+<script src="theme.js"></script>
+</head>
+<body>
+<div class="stage">
+  <div class="device">
+    <div class="app">
+
+      <div class="head">
+        <a class="back" href="c1-prototype.html" data-back="c1-prototype.html">‹</a>
+        <div class="ht">
+          <b id="hName">—</b>
+          <span id="hMeta">—</span>
+        </div>
+        <button class="hbtn" id="moreBtn">⋯</button>
+      </div>
+
+
+      <div class="ov">
+        <div class="ovtop">
+          <div class="ovmap">
+            <svg viewBox="190 236 592 592" preserveAspectRatio="xMidYMid meet"
+                 xmlns="http://www.w3.org/2000/svg" id="ovsvg">
+              <defs>
+                <linearGradient id="bG" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#0A1A21"/><stop offset="1" stop-color="#071117"/>
+                </linearGradient>
+              </defs>
+              <rect x="-200" y="-200" width="1400" height="1400" fill="url(#bG)"/>
+              <g fill="#0E242B" stroke="rgba(120,190,200,.09)" stroke-width="1">
+                <path d="M-60 110 C 120 30, 300 60, 420 150 C 520 226, 470 330, 360 372 C 250 414, 80 392, -30 300 Z"/>
+                <path d="M700 -50 C 870 10, 1000 120, 970 270 C 946 396, 820 430, 720 366 C 616 300, 612 110, 700 -50 Z"/>
+                <path d="M-70 620 C 100 560, 265 595, 345 700 C 428 808, 360 908, 215 946 C 80 980, -50 890, -70 620 Z"/>
+                <path d="M620 730 C 760 690, 900 726, 962 826 C 1002 902, 920 982, 798 962 C 676 942, 596 848, 620 730 Z"/>
+              </g>
+              <path d="M556 246 C 640 276, 692 382, 670 502 C 650 616, 578 686, 518 664 C 458 642, 438 540, 454 442 C 470 344, 498 226, 556 246 Z"
+                    fill="#0B2A34" stroke="rgba(90,200,215,.18)" stroke-width="1.5"/>
+              <g fill="none" stroke="rgba(200,222,232,.07)" stroke-width="2">
+                <path d="M30 830 C 190 770, 320 706, 432 642 S 604 520, 700 432 S 822 302, 902 216"/>
+                <path d="M110 190 C 246 296, 372 420, 466 556 S 556 762, 618 906"/>
+              </g>
+              <g id="dots"></g>
+              <g id="posArrow" opacity="0"><path d="" fill="#FF4D4D" stroke="rgba(8,14,18,.85)" stroke-width="2.5"/></g>
+            </svg>
+            <div class="ovempty">还没有位置信息<br>先去补坐标</div>
+          </div>
+          <div class="ovstats">
+            <div class="st"><b id="sDays">5</b><span>天</span></div>
+            <div class="st"><b id="sDist">214</b><span>公里</span></div>
+            <div class="st"><b id="sPhotos">842</b><span>张</span></div>
+            <div class="st"><b id="sVideos">37</b><span>视频</span></div>
+          </div>
+        </div>
+      </div>
+
+        <div class="jnote" id="jnote">
+          <div class="jwrap">
+            <div class="jb" id="jb" contenteditable="true"></div>
+            <button class="jmore" id="jmore" hidden aria-label="展开"></button>
+            <button class="jless" id="jless" hidden aria-label="收起"></button>
+          </div>
+        </div>
+
+      <div class="dims">
+        <button class="dim on" data-d="day">日期</button>
+        <span class="sep"></span>
+        <button class="dim" data-d="place">地点</button>
+      </div>
+      <div class="days" id="days"></div>
+      <div class="scroll" id="scroll">
+        <div class="exempty" id="exNone" style="display:none"></div>
+      </div>
+
+      <div class="selbar" id="selbar">
+        <span class="n" id="selN">已选 0 张</span>
+        <span class="sp"></span>
+        <button id="selAll">全选</button>
+        <button class="danger" id="selDel">删除</button>
+        <button id="selCancel">取消</button>
+      </div>
+
+      <div class="msheet" id="msheet">
+        <div class="mcard" id="mcard"></div>
+      </div>
+
+      <div class="editsheet" id="editsheet">
+        <div class="ecard">
+          <div class="eh">编辑行程信息</div>
+          <label class="erow"><span>行程名称</span><input id="eName" type="text"></label>
+          <label class="erow"><span>开始日期</span><input id="eFrom" type="date"></label>
+          <label class="erow"><span>结束日期</span><input id="eTo" type="date"></label>
+          <div class="efoot">
+            <button class="ghost" id="eCancel">取消</button>
+            <button class="ok" id="eOk">保存</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <p class="hint">独立页面 · 日期条可按住拖动 · 点日期跳转 · 左上角返回 C1</p>
+</div>
+
+<script src="data.js"></script>
+<script src="lightbox.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var TRIP = getTrip(q('trip'));
+  var DAYS = TRIP.dates.map(function(d, i){
+    return {id:'d' + i, label:d.label, place:d.place, x:d.x, y:d.y, n:d.n, sc:d.sc};
+  });
+  var TOTAL = DAYS.reduce(function(a, d){ return a + d.n; }, 0);
+
+  function paintHeader(){
+    document.getElementById('hName').textContent = tripName(TRIP);
+    document.getElementById('hMeta').textContent =
+      tripRange(TRIP) + ' · ' + tripDays(TRIP) + ' 天 · ' + TOTAL + ' 张 · ' + TRIP.size;
+    document.getElementById('sDays').textContent = tripDays(TRIP);
+  }
+  paintHeader();
+  document.getElementById('sDist').textContent = TRIP.dist;
+  document.getElementById('sPhotos').textContent = TOTAL;
+  document.getElementById('sVideos').textContent = TRIP.videos;
+
+  /* ---------- 手记：整趟一条 ---------- */
+  var JKEY = 'tripnest.journal.' + TRIP.id;
+  var jb = document.getElementById('jb');
+  var jmore = document.getElementById('jmore');
+  var jStore = {body: ''};
+
+  try{
+    var rawJ = JSON.parse(localStorage.getItem(JKEY) || 'null');
+    if(rawJ){
+      if(rawJ.summary) jStore.summary = rawJ.summary;
+      if(rawJ.body) jStore.body = rawJ.body;
+      else if(rawJ.days){            /* 旧版是按天存的，合并成一条 */
+        var segs = [];
+        for(var dk in rawJ.days){
+          if(rawJ.days[dk] && rawJ.days[dk].body) segs.push(rawJ.days[dk].body);
+        }
+        jStore.body = segs.join('<div><br></div>');
+      }
+    }
+  }catch(e){}
+
+  var JPH = '这一趟发生了什么？点这里写。';
+  if(jStore.body){
+    jb.innerHTML = jStore.body;
+  } else if(TRIP.body){
+    jb.innerHTML = String(TRIP.body).split(String.fromCharCode(10))
+      .map(function(l){ return '<div>' + l + '</div>'; }).join('');
+  } else {
+    jb.innerHTML = '<span class="ph">' + JPH + '</span>';
+    jb.classList.add('ph');
+  }
+
+  var jTimer = null;
+  function jSaveNow(){
+    jStore.body = jb.innerHTML;
+    try{ localStorage.setItem(JKEY, JSON.stringify(jStore)); }catch(e){}
+  }
+  function jSchedule(){
+    if(jTimer) clearTimeout(jTimer);
+    jTimer = setTimeout(jSaveNow, 600);
+  }
+
+  var jless = document.getElementById('jless');
+  var jOpen = false;
+
+  function jCheckMore(){
+    if(jOpen){
+      jmore.hidden = true;
+      jless.hidden = false;
+      return;
+    }
+    jless.hidden = true;
+    jmore.hidden = !(jb.scrollHeight > jb.clientHeight + 2);
+  }
+
+  jb.addEventListener('focus', function(){
+    if(jb.classList.contains('ph')){
+      jb.innerHTML = '';
+      jb.classList.remove('ph');
+    }
+  });
+  jb.addEventListener('input', function(){ jSchedule(); jCheckMore(); });
+  jb.addEventListener('blur', jSaveNow);
+  jb.addEventListener('scroll', jCheckMore);
+  window.addEventListener('resize', jCheckMore);
+
+  jmore.addEventListener('click', function(){
+    jOpen = true;
+    jb.classList.add('open');
+    jCheckMore();
+  });
+
+  jless.addEventListener('click', function(){
+    jOpen = false;
+    jb.classList.remove('open');
+    jb.scrollTop = 0;
+    jCheckMore();
+  });
+
+  setTimeout(jCheckMore, 60);
+
+  /* 小地图：按当前行程的分布自动算 viewBox，换行程不会跑偏 */
+  (function fitOv(){
+    var svg = document.getElementById('ovsvg');
+    if(!svg) return;
+
+    /* 降级策略 1：连一个坐标都没有 → 不画线，直接给引导 */
+    var hasCoord = DAYS.length > 0 && DAYS.every(function(d){
+      return typeof d.x === 'number' && typeof d.y === 'number';
+    });
+    if(!hasCoord){
+      var box = document.querySelector('.ovmap');
+      if(box) box.classList.add('empty');
+      return;
+    }
+
+    var minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
+    DAYS.forEach(function(d){
+      if(d.x < minx) minx = d.x; if(d.x > maxx) maxx = d.x;
+      if(d.y < miny) miny = d.y; if(d.y > maxy) maxy = d.y;
+    });
+    var pad = 120;
+    var side = Math.max((maxx - minx) + pad * 2, (maxy - miny) + pad * 2);
+    var cx = (minx + maxx) / 2, cy = (miny + maxy) / 2;
+    svg.setAttribute('viewBox', (cx - side/2) + ' ' + (cy - side/2) + ' ' + side + ' ' + side);
+
+    /* 低饱和路线 + 红色方向箭头 */
+    var NS = 'http://www.w3.org/2000/svg';
+    var g = document.getElementById('dots');
+    if(!g) return;
+    g.innerHTML = '';
+
+    /* 平滑曲线：以每天中点为锚，避免折返时出现生硬的交叉折线 */
+    /* 返程日不算新地点，不画进路线，否则会与去程交叉成 X */
+    var routeDays = DAYS.filter(function(d){ return d.place.indexOf('返程') !== 0; });
+    if(routeDays.length < 2) routeDays = DAYS;
+
+    var pts = routeDays.map(function(d){ return {x: d.x, y: d.y}; });
+    var dstr = 'M' + pts[0].x + ' ' + pts[0].y;
+    for(var k = 1; k < pts.length - 1; k++){
+      var mx = (pts[k].x + pts[k + 1].x) / 2;
+      var my = (pts[k].y + pts[k + 1].y) / 2;
+      dstr += ' Q' + pts[k].x + ' ' + pts[k].y + ' ' + mx + ' ' + my;
+    }
+    var lastP = pts[pts.length - 1];
+    dstr += ' L' + lastP.x + ' ' + lastP.y;
+
+    var line = document.createElementNS(NS, 'path');
+    line.setAttribute('d', dstr);
+    line.setAttribute('fill', 'none');
+    var hasTrack = !!(TRIP.track && TRIP.track.length > 1);
+    line.setAttribute('stroke', hasTrack ? 'rgba(215,230,240,.5)' : 'rgba(200,220,232,.34)');
+    line.setAttribute('stroke-width', (side * 0.022).toFixed(1));
+    if(!hasTrack){
+      /* 没有上传轨迹时，这条线是「每天之间的推定连线」，用虚线区分于真实轨迹 */
+      line.setAttribute('stroke-dasharray', (side * 0.045).toFixed(1) + ' ' + (side * 0.038).toFixed(1));
+    }
+    line.setAttribute('stroke-linecap', 'round');
+    line.setAttribute('stroke-linejoin', 'round');
+    g.appendChild(line);
+
+    /* 地点：低饱和圆点（贴合地图色），当前位置另用红色箭头 */
+    var dr = side * 0.030;
+    DAYS.forEach(function(d){
+      var c = document.createElementNS(NS, 'circle');
+      c.setAttribute('cx', d.x);
+      c.setAttribute('cy', d.y);
+      c.setAttribute('r', dr);
+      c.setAttribute('fill', 'rgba(168,200,210,.62)');
+      c.setAttribute('stroke', 'rgba(8,14,18,.7)');
+      c.setAttribute('stroke-width', dr * 0.5);
+      g.appendChild(c);
+    });
+
+    /* 定位箭头（指向下一段行进方向） */
+    var arrow = document.getElementById('posArrow');
+    if(arrow){
+      var sp = side * 0.055;
+      var dstr2 = 'M ' + sp + ' 0 L ' + (-sp * 0.72) + ' ' + (-sp * 0.78) +
+                  ' L ' + (-sp * 0.32) + ' 0 L ' + (-sp * 0.72) + ' ' + (sp * 0.78) + ' Z';
+      arrow.firstChild.setAttribute('d', dstr2);
+      arrow.firstChild.setAttribute('stroke-width', (sp * 0.16).toFixed(1));
+    }
+  })();
+  var SCENES = ['sc1','sc2','sc3','sc4','sc5','sc6','sc7','sc8'];
+  var ARS = ['4 / 3','3 / 2','16 / 9','1 / 1','9 / 16'];
+  var DIMS = {'4 / 3':'4000 × 3000','3 / 2':'4288 × 2848','16 / 9':'3840 × 2160','1 / 1':'3000 × 3000','9 / 16':'2160 × 3840'};
+
+  var photos = [], pid = 0;
+  DAYS.forEach(function(d, di){
+    for(var i = 0; i < d.n; i++){
+      var a = Math.random()*Math.PI*2;
+      var r = Math.pow(Math.random(), 0.65) * 62;
+      photos.push({
+        id:'p'+(pid++), day:d.id,
+        x: d.x + Math.cos(a)*r,
+        y: d.y + Math.sin(a)*r*0.82,
+        sc: SCENES[(di*3 + i) % SCENES.length],
+        ar: ARS[(di + i) % ARS.length],
+        pl: d.place
+      });
+    }
+  });
+
+  var daysEl = document.getElementById('days');
+  var scrollEl = document.getElementById('scroll');
+
+  var filterDim = 'day', filterDay = '', filterPlace = '';
+
+  function buildChips(){
+    var dh = '';
+    if(filterDim === 'day'){
+      dh += '<span class="chip' + (filterDay === '' ? ' on' : '') + '" data-day="">全部 ' + DAYS.length + ' 天</span>';
+      DAYS.forEach(function(d, i){
+        var on = filterDay === d.id;
+        dh += '<span class="chip' + (on ? ' on' : '') + '" data-day="' + d.id + '">' +
+              d.label + ' · ' + d.place.split(' · ')[0] + '</span>';
+      });
+    } else {
+      dh += '<span class="chip' + (filterPlace === '' ? ' on' : '') + '" data-p="">全部 ' + TOTAL + '</span>';
+      DAYS.forEach(function(d){
+        dh += '<span class="chip' + (filterPlace === d.place ? ' on' : '') +
+              '" data-p="' + d.place + '">' + d.place.split(' · ')[0] + ' ' + d.n + '</span>';
+      });
+    }
+    daysEl.innerHTML = dh;
+    daysEl.scrollLeft = 0;
+  }
+  buildChips();
+
+  /* ---------- 优质照片：封面 / 精选 / 备注 ---------- */
+  var exhibit = [];
+
+
+  /* 把「第几天」换算成真实日期，供大图里的日期修正使用 */
+  function isoOf(d, days){
+    var start = tripRange(TRIP).split(' - ')[0];
+    var p = String(start).split('.');
+    var idx = 0;
+    for(var i = 0; i < days.length; i++){ if(days[i].id === d.id) idx = i; }
+    var dt = new Date(+p[0], (+p[1]) - 1, +p[2]);
+    dt.setDate(dt.getDate() + idx);
+    return dt.getFullYear() + '-' +
+           String(dt.getMonth() + 1).padStart(2, '0') + '-' +
+           String(dt.getDate()).padStart(2, '0');
+  }
+
+  function findPhoto(id){
+    for(var i = 0; i < photos.length; i++){ if(photos[i].id === id) return photos[i]; }
+    return null;
+  }
+
+  function renderExhibit(){
+    var km = kindMapOf(TRIP.id, photos[0] ? photos[0].id : '');
+    exhibit = [];
+    for(var id in km){
+      var photo = findPhoto(id);
+      if(photo) exhibit.push({p: photo, ks: km[id]});
+    }
+
+  var sh = '';
+  DAYS.forEach(function(d){
+    var list = exhibit.filter(function(e){ return e.p.day === d.id; });
+    if(!list.length) return;
+    sh += '<section data-day="' + d.id + '" data-place="' + d.place + '">';
+    var wi = (TRIP.weather && TRIP.weather[DAYS.indexOf(d)]) || null;
+    var wtag = wi ? iconSvg(wi.k, 18).replace('<svg ', '<svg class="wi" ') + '<b>' + wi.t + '</b>' : '';
+    sh += '<div class="datehead"><span>' + d.label + ' · ' + d.place + wtag + '</span>' +
+          '<button class="expbtn" data-day="' + d.id + '">展开全部</button></div>';
+    sh += '<div class="grid">';
+    list.forEach(function(e){
+      var dots = e.ks.map(function(k){ return '<i class="' + k + '"></i>'; }).join('');
+      sh += '<div class="tile scene ' + e.p.sc + '" data-id="' + e.p.id + '">' +
+            '<span class="dots">' + dots + '</span>' +
+            '<span class="sun"></span><span class="hill"></span><span class="hill2"></span></div>';
+    });
+    sh += '</div></section>';
+  });
+
+  if(!sh){
+    sh = '<div class="exempty"><b>还没有优质照片</b>' +
+         '把喜欢的照片设为封面、加入精选或写一句备注，<br>它们会集中出现在这里。</div>';
+  } else if(exhibit.length <= 1){
+    sh += '<div class="exempty"><b>再加几张</b>' +
+         '在地图页点开照片，可以设为封面、加入精选或写备注。</div>';
+  }
+  var old = scrollEl.querySelectorAll('section, .exempty:not(#exNone)');
+  for(var oi = 0; oi < old.length; oi++) old[oi].parentNode.removeChild(old[oi]);
+  var keepTop = scrollEl.scrollTop;
+  scrollEl.insertAdjacentHTML('beforeend', sh);
+  scrollEl.scrollTop = keepTop;
+  jCheckMore();
+  }
+  renderExhibit();
+
+  /* 小地图不再铺照片点，改为路线 + 方向箭头（见 fitOv） */
+
+  /* 日期条横向滚动：自己补间，不依赖 smooth / rAF */
+  var chipAnim = null;
+
+  function animChipTo(left, dur){
+    var maxLeft = Math.max(0, daysEl.scrollWidth - daysEl.clientWidth);
+    left = Math.max(0, Math.min(left, maxLeft));
+    if(chipAnim){ clearTimeout(chipAnim); chipAnim = null; }
+    var from = daysEl.scrollLeft, dist = left - from;
+    if(Math.abs(dist) < 1 || !dur){ daysEl.scrollLeft = left; return; }
+    var t0 = Date.now();
+    function step(){
+      var k = Math.min(1, (Date.now() - t0) / dur);
+      var e = 1 - Math.pow(1 - k, 3);
+      daysEl.scrollLeft = from + dist * e;
+      if(k < 1){ chipAnim = setTimeout(step, 16); } else { chipAnim = null; }
+    }
+    chipAnim = setTimeout(step, 16);
+  }
+
+  function centerChip(dayId, animate){
+    var chip = daysEl.querySelector('.chip[data-day="' + dayId + '"]');
+    if(!chip) return;
+    var cr = chip.getBoundingClientRect();
+    var dr = daysEl.getBoundingClientRect();
+    var delta = (cr.left - dr.left) - (daysEl.clientWidth - cr.width) / 2;
+    if(Math.abs(delta) < 6) return;
+    animChipTo(daysEl.scrollLeft + delta, animate === false ? 0 : 280);
+  }
+
+  /* 定位箭头：站在当前天，朝向下一段行进方向 */
+  var posArrow = document.getElementById('posArrow');
+
+  function setPos(idx){
+    if(!posArrow || idx < 0 || !DAYS[idx]) return;
+    var d = DAYS[idx], ang = 0;
+    if(idx < DAYS.length - 1){
+      ang = Math.atan2(DAYS[idx + 1].y - d.y, DAYS[idx + 1].x - d.x) * 180 / Math.PI;
+    } else if(idx > 0){
+      ang = Math.atan2(d.y - DAYS[idx - 1].y, d.x - DAYS[idx - 1].x) * 180 / Math.PI;
+    }
+    posArrow.setAttribute('transform',
+      'translate(' + d.x + ',' + d.y + ') rotate(' + ang.toFixed(1) + ')');
+    posArrow.setAttribute('opacity', '1');
+  }
+
+  function setDay(dayId, opts){
+    opts = opts || {};
+    var idx = -1;
+    for(var q = 0; q < DAYS.length; q++){ if(DAYS[q].id === dayId) idx = q; }
+    var d = DAYS[idx];
+    if(!d) return;
+    setPos(idx);
+    var all = daysEl.querySelectorAll('.chip');
+    for(var i = 0; i < all.length; i++){
+      all[i].classList.toggle('on', all[i].dataset.day === dayId);
+    }
+    var heads = scrollEl.querySelectorAll('.datehead');
+    for(var j = 0; j < heads.length; j++){
+      var sec = heads[j].parentNode;
+      heads[j].classList.toggle('on', sec && sec.dataset.day === dayId);
+    }
+    if(opts.center === false || chipDown) return;
+    centerChip(dayId, opts.animate !== false);
+  }
+
+  /* 纵向列表滚动：setTimeout 补间。
+     不用 rAF（预览面板/WebView 里可能被节流），也不用 behavior:'smooth'
+     （某些环境下直接不生效，表现为"点了完全不动"） */
+  var syncLock = false, settleTimer = null;
+
+  function scrollListTo(top, dur, done){
+    var maxTop = Math.max(0, scrollEl.scrollHeight - scrollEl.clientHeight);
+    top = Math.max(0, Math.min(top, maxTop));
+    if(settleTimer){ clearTimeout(settleTimer); settleTimer = null; }
+
+    var from = scrollEl.scrollTop, dist = top - from, finished = false;
+
+    function finish(){
+      if(finished) return;
+      finished = true;
+      if(settleTimer){ clearTimeout(settleTimer); settleTimer = null; }
+      if(done) done();
+    }
+
+    if(Math.abs(dist) < 1){ scrollEl.scrollTop = top; finish(); return; }
+
+    var t0 = Date.now();
+    function step(){
+      var k = Math.min(1, (Date.now() - t0) / (dur || 340));
+      var e = 1 - Math.pow(1 - k, 3);
+      scrollEl.scrollTop = from + dist * e;
+      if(k < 1){ settleTimer = setTimeout(step, 16); }
+      else { settleTimer = null; finish(); }
+    }
+    settleTimer = setTimeout(step, 16);
+    setTimeout(finish, (dur || 340) + 900);
+  }
+
+  function stopListAnim(){
+    if(settleTimer){ clearTimeout(settleTimer); settleTimer = null; }
+    syncLock = false;
+  }
+
+  scrollEl.addEventListener('scroll', function(){
+    if(syncLock) return;
+    var secs = scrollEl.querySelectorAll('section');
+    var activeDay = '';
+    for(var i = 0; i < secs.length; i++){
+      if(secs[i].offsetTop - scrollEl.scrollTop <= 60) activeDay = secs[i].dataset.day;
+    }
+    if(activeDay) setDay(activeDay, {animate: true});
+  }, {passive:true});
+
+  /* 用户一动手就停掉程序化滚动，别跟人抢 */
+  scrollEl.addEventListener('wheel', stopListAnim, {passive:true});
+  scrollEl.addEventListener('pointerdown', stopListAnim);
+  scrollEl.addEventListener('touchstart', stopListAnim, {passive:true});
+
+  /* 日期条：鼠标按住拖动横向滚动（触屏走原生滚动） */
+  var chipDown = false, chipMoved = false, chipX = 0, chipLeft = 0, justDragged = false;
+
+  daysEl.addEventListener('pointerdown', function(e){
+    if(e.pointerType === 'touch') return;
+    justDragged = false;
+    if(chipAnim){ cancelAnimationFrame(chipAnim); chipAnim = null; }
+    chipDown = true; chipMoved = false;
+    chipX = e.clientX; chipLeft = daysEl.scrollLeft;
+    daysEl.classList.add('dragging');
+  });
+  daysEl.addEventListener('pointermove', function(e){
+    if(!chipDown) return;
+    var dx = e.clientX - chipX;
+    if(Math.abs(dx) > 4) chipMoved = true;
+    if(chipMoved) daysEl.scrollLeft = chipLeft - dx;
+  });
+  function chipEnd(){
+    if(!chipDown) return;
+    chipDown = false;
+    daysEl.classList.remove('dragging');
+    if(chipMoved){
+      justDragged = true;
+      setTimeout(function(){ justDragged = false; }, 60);
+    }
+  }
+  daysEl.addEventListener('pointerup', chipEnd);
+  daysEl.addEventListener('pointerleave', chipEnd);
+  daysEl.addEventListener('pointercancel', chipEnd);
+
+  daysEl.addEventListener('click', function(e){
+    if(justDragged) return;
+    var c = e.target.closest('.chip');
+    if(!c) return;
+    var all = daysEl.querySelectorAll('.chip');
+    for(var i = 0; i < all.length; i++) all[i].classList.remove('on');
+    c.classList.add('on');
+
+    if(filterDim === 'place'){
+      filterPlace = c.dataset.p || '';
+    } else {
+      filterDay = c.dataset.day || '';
+    }
+    applyFilter();
+  });
+
+  /* 按日期 / 地点过滤：只显隐分组，不重建 DOM */
+  function applyFilter(){
+    var secs = scrollEl.querySelectorAll('section');
+    var shown = 0;
+    for(var i = 0; i < secs.length; i++){
+      var sec = secs[i];
+      var show = filterDim === 'day'
+        ? (!filterDay || sec.dataset.day === filterDay)
+        : (!filterPlace || sec.dataset.place === filterPlace);
+      sec.style.display = show ? '' : 'none';
+      if(show) shown++;
+    }
+
+    var noneEl = document.getElementById('exNone');
+    var label = filterDim === 'day'
+      ? (filterDay ? (DAYS.filter(function(d){ return d.id === filterDay; })[0] || {}).label : '')
+      : (filterPlace ? filterPlace.split(' · ')[0] : '');
+    if(label && !shown && secs.length){
+      noneEl.style.display = '';
+      noneEl.innerHTML = '<b>「' + label + '」还没有优质照片</b>' +
+                         '去地图页看看这里的照片，挑几张精选或写条备注。';
+    } else {
+      noneEl.style.display = 'none';
+    }
+
+    /* 小地图跟着跳 */
+    var idx = -1;
+    if(filterDim === 'day' && filterDay){
+      for(var n = 0; n < DAYS.length; n++){ if(DAYS[n].id === filterDay) idx = n; }
+    } else if(filterDim === 'place' && filterPlace){
+      for(var m = 0; m < DAYS.length; m++){ if(DAYS[m].place === filterPlace) idx = m; }
+    } else {
+      for(var k = 0; k < secs.length; k++){
+        if(secs[k].offsetTop - scrollEl.scrollTop <= 60){
+          for(var q = 0; q < DAYS.length; q++){ if(DAYS[q].id === secs[k].dataset.day) idx = q; }
+        }
+      }
+    }
+    if(idx >= 0) setPos(idx);
+  }
+
+  /* 展开某一组的全部照片（只限该组，不会串到别的标签） */
+  scrollEl.addEventListener('click', function(e){
+    var btn = e.target.closest('.expbtn');
+    if(!btn) return;
+    var sec = btn.closest('section');
+    var grid = sec.querySelector('.grid');
+    if(sec.classList.contains('expanded')){
+      sec.classList.remove('expanded');
+      var ex = grid.querySelectorAll('.tile.extra');
+      for(var i = 0; i < ex.length; i++) ex[i].parentNode.removeChild(ex[i]);
+      btn.textContent = '展开全部';
+      return;
+    }
+    var have = {};
+    var cur = grid.querySelectorAll('.tile');
+    for(var j = 0; j < cur.length; j++) have[cur[j].dataset.id] = 1;
+    var all = photos.filter(function(p){ return p.day === sec.dataset.day; });
+    var frag = '';
+    for(var k = 0; k < all.length; k++){
+      if(have[all[k].id]) continue;
+      frag += '<div class="tile scene extra ' + all[k].sc + '" data-id="' + all[k].id + '">' +
+              '<span class="sun"></span><span class="hill"></span><span class="hill2"></span></div>';
+    }
+    grid.insertAdjacentHTML('beforeend', frag);
+    sec.classList.add('expanded');
+    btn.textContent = '收起';
+  });
+
+  var dimBtns = document.querySelectorAll('.dims .dim');
+  for(var di = 0; di < dimBtns.length; di++){
+    dimBtns[di].addEventListener('click', function(){
+      for(var k = 0; k < dimBtns.length; k++) dimBtns[k].classList.remove('on');
+      this.classList.add('on');
+      filterDim = this.dataset.d;
+      filterDay = '';
+      filterPlace = '';
+      buildChips();
+      applyFilter();
+    });
+  }
+
+  scrollEl.addEventListener('click', function(e){
+    var t = e.target.closest('.tile');
+    if(!t) return;
+
+    if(selecting){
+      var sid = t.dataset.id;
+      if(selected[sid]){ delete selected[sid]; t.classList.remove('on'); }
+      else { selected[sid] = 1; t.classList.add('on'); }
+      updateSel();
+      return;
+    }
+
+    var p = photos.filter(function(x){ return x.id === t.dataset.id; })[0];
+    if(!p) return;
+    curPhoto = p;
+    var d = DAYS.filter(function(x){ return x.id === p.day; })[0];
+    Lightbox.open({
+      sc: p.sc,
+      ar: p.ar,
+      meta: {iso: isoOf(d, DAYS), date: d.label, place: d.place, suffix: DIMS[p.ar] || ''},
+      metaKey: 'trip:' + TRIP.id + ':' + p.id,
+      noteKey: 'trip:' + TRIP.id + ':' + p.id,
+      feat: {
+        on: isFeatured(TRIP.id, p.id),
+        toggle: function(){
+          var list = toggleFeatured(TRIP.id, {id: p.id, sc: p.sc, t: d.label + ' · ' + d.place});
+          var on = false;
+          for(var i = 0; i < list.length; i++){ if(list[i].id === p.id) on = true; }
+          renderExhibit();
+          return on;
+        }
+      },
+      isCover: (function(){ var c = coverOf(TRIP.id); return !!(c && c.id === p.id); })(),
+      cover: function(){ setCover(TRIP.id, {id: p.id, sc: p.sc}); },
+      onDelete: function(){ removePhotos([p.id]); }
+    });
+  });
+
+  var firstSec = scrollEl.querySelector('section');
+  setDay(firstSec ? firstSec.dataset.day : DAYS[0].id, {animate: false});
+
+  /* ================= 行程操作 / 批量删照片 ================= */
+  var msheet = document.getElementById('msheet');
+  var mcard = document.getElementById('mcard');
+  var selbar = document.getElementById('selbar');
+  var selN = document.getElementById('selN');
+  var selecting = false;
+  var selected = {};
+  var curPhoto = null;
+
+  var toast = Lightbox.toast;
+
+  function openMenu(items, title){
+    mcard.innerHTML = (title ? '<div class="mh">' + title + '</div>' : '') +
+      items.map(function(it, i){
+        return '<div class="mi' + (it.danger ? ' danger' : '') + (it.cancel ? ' cancel' : '') +
+               '" data-i="' + i + '">' +
+               (it.em ? '<span class="em">' + it.em + '</span>' : '') + it.label + '</div>';
+      }).join('');
+    msheet.classList.add('show');
+    mcard.onclick = function(e){
+      var el = e.target.closest('.mi');
+      if(!el) return;
+      var it = items[+el.dataset.i];
+      closeMenu();
+      if(it && it.fn) setTimeout(it.fn, 130);
+    };
+  }
+  function closeMenu(){ msheet.classList.remove('show'); }
+  msheet.addEventListener('click', function(e){ if(e.target === msheet) closeMenu(); });
+
+  function copyText(txt, okMsg){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){ toast(okMsg); }, function(){ toast('复制失败'); });
+    } else {
+      toast(okMsg);
+    }
+  }
+
+  function shareTrip(){
+    openMenu([
+      {em:'⧉', label:'复制分享链接', fn: function(){ copyText('tripnest://trip/' + TRIP.id, '链接已复制'); }},
+      {em:'▤', label:'导出足迹长图', fn: function(){ toast('正在生成长图…'); }},
+      {em:'☰', label:'导出照片清单（CSV）', fn: function(){ toast('已导出 ' + TOTAL + ' 条记录'); }},
+      {label:'取消', cancel:true, fn: closeMenu}
+    ], '分享「' + TRIP.name + '」');
+  }
+
+  function confirmDeleteTrip(){
+    openMenu([
+      {em:'⚠', label:'删除「' + TRIP.name + '」及索引', danger:true, fn: function(){
+        markTripDeleted(TRIP.id);
+        toast('已删除，正在返回列表…');
+        setTimeout(function(){ location.href = 'trips.html'; }, 950);
+      }},
+      {label:'取消', cancel:true, fn: closeMenu}
+    ], '只会移除 App 内的索引，照片文件不会被删除');
+  }
+
+  document.getElementById('moreBtn').addEventListener('click', function(){
+    openMenu([
+      {em:'↗', label:'分享行程', fn: shareTrip},
+      {em:'▤', label:'导出足迹长图', fn: function(){ toast('正在生成长图…'); }},
+      {em:'☑', label:'批量选择照片', fn: enterSelect},
+      {em:'▦', label:'分享精选九宫格', fn: function(){ location.href = 'share.html?trip=' + TRIP.id; }},
+      {em:'✎', label:'编辑行程信息', fn: openEdit},
+      {em:'✕', label:'删除这个行程', danger:true, fn: confirmDeleteTrip},
+      {label:'取消', cancel:true, fn: closeMenu}
+    ], TRIP.name);
+  });
+
+  /* ---- 选择模式 ---- */
+  function enterSelect(){
+    selecting = true; selected = {};
+    scrollEl.classList.add('selmode');
+    selbar.classList.add('show');
+    updateSel();
+  }
+  function exitSelect(){
+    selecting = false; selected = {};
+    scrollEl.classList.remove('selmode');
+    selbar.classList.remove('show');
+    var on = scrollEl.querySelectorAll('.tile.on');
+    for(var i = 0; i < on.length; i++) on[i].classList.remove('on');
+  }
+  function updateSel(){
+    var n = Object.keys(selected).length;
+    selN.textContent = n ? '已选 ' + n + ' 张' : '点照片选择';
+    var del = document.getElementById('selDel');
+    del.style.opacity = n ? '1' : '.4';
+    del.style.pointerEvents = n ? 'auto' : 'none';
+  }
+  document.getElementById('selCancel').addEventListener('click', exitSelect);
+  document.getElementById('selAll').addEventListener('click', function(){
+    var tiles = scrollEl.querySelectorAll('.tile');
+    var allOn = true;
+    for(var i = 0; i < tiles.length; i++){ if(!tiles[i].classList.contains('on')) allOn = false; }
+    for(var j = 0; j < tiles.length; j++){
+      var t = tiles[j];
+      if(allOn){ t.classList.remove('on'); delete selected[t.dataset.id]; }
+      else { t.classList.add('on'); selected[t.dataset.id] = 1; }
+    }
+    updateSel();
+  });
+  document.getElementById('selDel').addEventListener('click', function(){
+    var ids = Object.keys(selected);
+    if(!ids.length) return;
+    openMenu([
+      {em:'⚠', label:'移除选中的 ' + ids.length + ' 张', danger:true, fn: function(){ removePhotos(ids); }},
+      {label:'取消', cancel:true, fn: closeMenu}
+    ], '只会从 App 里移除，原文件不动');
+  });
+
+  function removePhotos(ids){
+    var set = {};
+    ids.forEach(function(id){ set[id] = 1; });
+    ids.forEach(function(id){
+      var el = scrollEl.querySelector('.tile[data-id="' + id + '"]');
+      if(el && el.parentNode) el.parentNode.removeChild(el);
+    });
+    photos = photos.filter(function(x){ return !set[x.id]; });
+    TOTAL = photos.length;
+    var sp = document.getElementById('sPhotos');
+    if(sp) sp.textContent = TOTAL;
+    paintHeader();
+    buildChips();
+    applyFilter();
+    exitSelect();
+    toast('已移除 ' + ids.length + ' 张');
+  }
+
+
+  /* ---- 编辑行程信息：名称 / 起止日期，天数自动算 ---- */
+  var editsheet = document.getElementById('editsheet');
+
+  function toInput(d){ return String(d).split('.').join('-'); }
+
+  function openEdit(){
+    var r = tripRange(TRIP);              /* 例：2026.10.02 - 10.06 */
+    var parts = String(r).split(' - ');
+    var y = String(parts[0] || '').split('.')[0];
+    document.getElementById('eName').value = tripName(TRIP);
+    document.getElementById('eFrom').value = toInput(parts[0] || '');
+    document.getElementById('eTo').value = toInput(y + '.' + (parts[1] || ''));
+    editsheet.classList.add('show');
+  }
+
+  function closeEdit(){ editsheet.classList.remove('show'); }
+
+  document.getElementById('eCancel').addEventListener('click', closeEdit);
+  editsheet.addEventListener('click', function(e){ if(e.target === editsheet) closeEdit(); });
+
+  document.getElementById('eOk').addEventListener('click', function(){
+    var nm = document.getElementById('eName').value.trim();
+    var from = document.getElementById('eFrom').value;
+    var to = document.getElementById('eTo').value;
+    if(!nm){ Lightbox.toast('请填写行程名称'); return; }
+    if(!from || !to){ Lightbox.toast('请选择起止日期'); return; }
+    if(to < from){ Lightbox.toast('结束日期不能早于开始'); return; }
+
+    var d1 = new Date(from + 'T00:00:00');
+    var d2 = new Date(to + 'T00:00:00');
+    var days = Math.round((d2 - d1) / 86400000) + 1;
+    var f = from.split('-'), t = to.split('-');
+    var range = f[0] + '.' + f[1] + '.' + f[2] + ' - ' + t[1] + '.' + t[2];
+
+    setTripMeta(TRIP.id, {name: nm, range: range, days: days});
+    paintHeader();
+    closeEdit();
+    Lightbox.toast('已保存行程信息');
+  });
+
+})();
+</script>
+<script src="nav.js"></script>
+<script src="statusbar.js"></script>
+</body>
+</html>

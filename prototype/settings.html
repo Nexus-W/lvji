@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>设置</title>
+<link rel="stylesheet" href="proto.css">
+<script src="theme.js"></script>
+<style>
+  .grp{padding:0 16px}
+  .card .row{padding:12px 12px}
+  .row .v{font-size:12px;color:var(--t3)}
+  .row.sel{cursor:pointer}
+  .row.sel:active{background:rgba(255,255,255,.03)}
+  .row .v.cur{color:var(--t1)}
+  .foot{text-align:center;font-size:9px;color:var(--t3);line-height:1.9;padding:16px 20px 20px}
+
+  /* 选项面板 */
+  .mask{position:absolute;inset:0;z-index:120;background:rgba(3,6,9,.72);backdrop-filter:blur(4px);
+    display:none;align-items:flex-end}
+  .mask.show{display:flex}
+  .pick{width:100%;background:var(--panel2);border-radius:18px 18px 0 0;
+    border-top:1px solid rgba(255,255,255,.1);padding:8px 0 16px;
+    transform:translateY(100%);transition:transform .26s ease-out}
+  .mask.show .pick{transform:translateY(0)}
+  .pk-h{display:flex;align-items:center;padding:12px 16px 8px;border-bottom:1px solid var(--line);
+    font-size:12px;font-weight:600}
+  .pk-x{margin-left:auto;width:24px;height:24px;border-radius:7px;display:flex;align-items:center;
+    justify-content:center;color:var(--t3);font-size:15px;line-height:1;cursor:pointer}
+  .pk-x:active{background:rgba(255,255,255,.07);color:var(--t1)}
+  .opt{display:flex;align-items:center;gap:8px;padding:12px 16px;font-size:12px;cursor:pointer;
+    border-bottom:1px solid rgba(35,44,57,.55)}
+  .opt:last-child{border-bottom:none}
+  .opt:active{background:rgba(255,255,255,.03)}
+  .opt .mk{width:16px;height:16px;flex:0 0 16px;border-radius:50%;border:1.5px solid #33404F;
+    display:flex;align-items:center;justify-content:center;font-size:9px;color:#04170F}
+  .opt.on .mk{background:var(--accent);border-color:var(--accent)}
+  .opt.on{color:var(--t1);font-weight:600}
+  .opt.danger{color:var(--rose)}
+  .pk-note{font-size:9px;color:var(--t3);padding:8px 16px 2px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="device">
+    <div class="app">
+
+      <div class="head">
+        <div class="ht"><b style="font-size:15px">设置</b><span>旅影 TripNest 0.1 原型</span></div>
+      </div>
+
+      <div class="scroll">
+        <div class="grp">
+
+          <div class="sect">导入</div>
+          <div class="card">
+            <a class="row" href="scanning.html"><span class="ic">↓</span>
+              <div class="tx"><b>立即扫描素材</b><span>读取相册与 SD 卡的新素材</span></div>
+              <span class="val">›</span></a>
+            <a class="row" href="track-import.html"><span class="ic">↗</span>
+              <div class="tx"><b>从两步路导入轨迹</b><span>GPX / KML / KMZ，可用来补全照片坐标</span></div>
+              <span class="val">›</span></a>
+            <div class="row"><span class="ic">▷</span>
+              <div class="tx"><b>包含视频</b><span>只读文件头 + 首帧封面，不转码</span></div>
+              <span class="sw on"></span></div>
+            <div class="row sel" data-opts="节省空间|标准|高清原图" data-cur="标准">
+              <span class="ic">▤</span>
+              <div class="tx"><b>缩略图质量</b><span>影响滚动流畅度与占用</span></div>
+              <span class="v cur">标准 ›</span></div>
+          </div>
+
+          <div class="sect">归组规则</div>
+          <div class="card">
+            <div class="row sel" data-opts="2 小时|4 小时|8 小时|12 小时" data-cur="4 小时">
+              <span class="ic">⏱</span>
+              <div class="tx"><b>时间断层</b><span>超过这个间隔就切成新的行程</span></div>
+              <span class="v cur">4 小时 ›</span></div>
+            <div class="row sel" data-opts="20 公里|50 公里|100 公里|不限" data-cur="50 公里">
+              <span class="ic">⌖</span>
+              <div class="tx"><b>地理断层</b><span>距离超过这个值也切开</span></div>
+              <span class="v cur">50 公里 ›</span></div>
+            <div class="row"><span class="ic">⇄</span>
+              <div class="tx"><b>跨设备合并</b><span>手机与运动相机同一时段并入同一行程</span></div>
+              <span class="sw on"></span></div>
+          </div>
+
+          <div class="sect">地图</div>
+          <div class="card">
+            <div class="row sel" data-opts="标准|卫星影像|等高线|夜间" data-cur="标准">
+              <span class="ic">◈</span>
+              <div class="tx"><b>底图</b><span>腾讯位置服务（合规底图）</span></div>
+              <span class="v cur">标准 ›</span></div>
+            <div class="row"><span class="ic">⇩</span>
+              <div class="tx"><b>离线地图</b><span>旅行途中没网也能看位置</span></div>
+              <span class="sw"></span></div>
+            <div class="row sel" data-opts="跟随系统|始终浅色|始终深色" data-cur="始终深色">
+              <span class="ic">◐</span>
+              <div class="tx"><b>界面主题</b><span>跟随系统会在夜间自动变暗</span></div>
+              <span class="v cur">始终深色 ›</span></div>
+          </div>
+
+          <div class="sect">隐私</div>
+          <div class="card">
+            <div class="row"><span class="ic">◑</span>
+              <div class="tx"><b>分享时剥离 GPS</b><span>导出照片不写入坐标</span></div>
+              <span class="sw on"></span></div>
+            <div class="row"><span class="ic">⌂</span>
+              <div class="tx"><b>家附近模糊化</b><span>住址 200 米内的照片不显示精确点</span></div>
+              <span class="sw on"></span></div>
+            <div class="row sel" data-opts="关闭|仅 Wi-Fi|始终开启" data-cur="关闭">
+              <span class="ic">☁</span>
+              <div class="tx"><b>云同步</b><span>当前为纯本地模式，数据不出手机</span></div>
+              <span class="v cur">关闭 ›</span></div>
+          </div>
+
+          <div class="sect">存储</div>
+          <div class="card">
+            <div class="row sel" data-action="清理缩略图缓存" data-cur="386 MB">
+              <span class="ic">▦</span>
+              <div class="tx"><b>缩略图缓存</b><span>可随时清理，会自动重建</span></div>
+              <span class="v cur">386 MB ›</span></div>
+            <a class="row" href="notes.html"><span class="ic">✎</span>
+              <div class="tx"><b>导出索引与备注</b><span>CSV + Markdown，防止 App 卸载后丢失</span></div>
+              <span class="val">›</span></a>
+            <div class="row sel" data-action="重建索引" data-cur="">
+              <span class="ic">↻</span>
+              <div class="tx"><b>重建索引</b><span>照片错位、行程归组异常时使用</span></div>
+              <span class="v">›</span></div>
+          </div>
+
+          <a class="row" href="onboarding.html" style="margin-top:12px;border-radius:12px;
+             background:var(--panel2);border:1px solid var(--line)">
+            <span class="ic">?</span>
+            <div class="tx"><b>重新查看引导</b><span>第一次使用时的三个选项</span></div>
+            <span class="val">›</span></a>
+
+          <div class="foot">
+            所有数据只保存在本机<br>
+            选项会记住（刷新后仍生效）<br>
+            <span style="color:var(--t3);opacity:.8">底图 / 云同步 / 重建索引等需正式版接入</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabbar">
+        <a class="tab" href="trips.html"><i></i>行程</a>
+        <a class="tab" href="footprint.html"><i></i>地图</a>
+      </div>
+
+      <div class="mask" id="mask">
+        <div class="pick" id="pick">
+          <div class="pk-h"><span id="pkTitle">—</span><span class="pk-x" id="pkX">×</span></div>
+          <div id="pkBody"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <p class="hint">P8 设置 · 每一行都能点开 · 开关直接拨 · 带 › 的弹出选项</p>
+</div>
+
+<script src="nav.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  /* 开关 */
+  var sws = document.querySelectorAll('.sw');
+  for(var i = 0; i < sws.length; i++){
+    sws[i].addEventListener('click', function(e){
+      e.stopPropagation();
+      this.classList.toggle('on');
+    });
+  }
+
+  /* 选项面板 */
+  var mask = document.getElementById('mask');
+  var pkTitle = document.getElementById('pkTitle');
+  var pkBody = document.getElementById('pkBody');
+  var curRow = null;
+
+  function closePick(){ mask.classList.remove('show'); }
+
+  var STORE = 'tripnest.settings';
+  var S = {};
+  try { S = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch(e){ S = {}; }
+
+  function saveAll(){
+    try { localStorage.setItem(STORE, JSON.stringify(S)); } catch(e){}
+  }
+
+  function rowKey(row){ return row.querySelector('.tx b').textContent; }
+
+  function paint(row, val){
+    row.dataset.cur = val;
+    var el = row.querySelector('.v');
+    if(!el) return;
+    el.textContent = val + ' ›';
+    el.classList.add('cur');
+  }
+
+  /* 打开时恢复上次的选择 */
+  (function restore(){
+    var rows = document.querySelectorAll('.row.sel');
+    for(var i = 0; i < rows.length; i++){
+      var k = rowKey(rows[i]);
+      if(S[k]) paint(rows[i], S[k]);
+    }
+  })();
+
+  function openPick(row){
+    curRow = row;
+    var title = row.querySelector('.tx b').textContent;
+    var cur = row.dataset.cur || '';
+    pkTitle.textContent = title;
+
+    if(row.dataset.opts){
+      var opts = row.dataset.opts.split('|');
+      pkBody.innerHTML = opts.map(function(o){
+        return '<div class="opt' + (o === cur ? ' on' : '') + '" data-v="' + o + '">' +
+               '<span class="mk">' + (o === cur ? '✓' : '') + '</span>' + o + '</div>';
+      }).join('') + '<div class="pk-note">选择后会立即生效，可随时改回来。</div>';
+    } else {
+      var act = row.dataset.action || '执行';
+      pkBody.innerHTML =
+        '<div class="opt danger" data-v="__do">' + act + '</div>' +
+        '<div class="opt" data-v="__cancel">取消</div>' +
+        '<div class="pk-note">' +
+          (act.indexOf('缓存') >= 0
+            ? '清理后首次滚动会重新生成缩略图，稍慢属正常。'
+            : '重建索引会重新读取全部素材的元数据，耗时取决于素材数量。') +
+        '</div>';
+    }
+    mask.classList.add('show');
+  }
+
+  pkBody.addEventListener('click', function(e){
+    var o = e.target.closest('.opt');
+    if(!o) return;
+    var v = o.dataset.v;
+
+    if(v === '__cancel'){ closePick(); return; }
+
+    if(v === '__do'){
+      var label = curRow.querySelector('.v');
+      var act = curRow.dataset.action;
+      if(act === '清理缩略图缓存'){
+        label.textContent = '0 MB ›';
+        label.classList.add('cur');
+        curRow.dataset.cur = '0 MB';
+        S[rowKey(curRow)] = '0 MB';
+        saveAll();
+      } else {
+        label.textContent = '已重建 ›';
+        label.classList.remove('cur');
+      }
+      closePick();
+      return;
+    }
+
+    paint(curRow, v);
+    S[rowKey(curRow)] = v;
+    saveAll();
+
+    /* 主题：重新加载，让 theme.js 按新设置重绘 */
+    if(rowKey(curRow) === '界面主题'){
+      closePick();
+      location.reload();
+      return;
+    }
+    closePick();
+  });
+
+  document.getElementById('pkX').addEventListener('click', closePick);
+  mask.addEventListener('click', function(e){ if(e.target === mask) closePick(); });
+
+  /* 所有带 sel 的行都能点开 */
+  var rows = document.querySelectorAll('.row.sel');
+  for(var j = 0; j < rows.length; j++){
+    rows[j].addEventListener('click', function(){ openPick(this); });
+  }
+})();
+</script>
+<script src="statusbar.js"></script>
+</body>
+</html>

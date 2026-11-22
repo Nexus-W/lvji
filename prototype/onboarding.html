@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>欢迎使用旅影</title>
+<link rel="stylesheet" href="proto.css">
+<script src="theme.js"></script>
+<style>
+  .ob-back{position:absolute;left:14px;top:14px;z-index:5;width:32px;height:32px;border-radius:10px;
+    border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+    color:var(--t2);text-decoration:none;font-size:15px;background:rgba(15,20,27,.6)}
+  .ob-back:active{color:var(--accent);border-color:rgba(61,220,151,.5)}
+
+  .hero{padding:24px 20px 8px;text-align:center;flex:0 0 auto}
+  .logo{width:54px;height:54px;border-radius:16px;0 auto 16px;
+    background:linear-gradient(150deg,#3DDC97,#1F8A5F);position:relative;overflow:hidden}
+  .logo::after{content:"";position:absolute;left:-10%;right:-10%;bottom:-6%;height:52%;
+    background:#0A2018;clip-path:polygon(0 100%,0 62%,22% 40%,44% 60%,64% 34%,100% 58%,100% 100%)}
+  .hero h1{margin:0;font-size:20px;letter-spacing:-.4px}
+  .hero p{margin:8px 0 0;font-size:12px;color:var(--t3);line-height:1.8}
+  .opts{padding:16px 16px 0;flex:0 0 auto}
+  .opt{display:flex;align-items:center;gap:12px;padding:12px;border-radius:13px;margin-bottom:8px;
+    background:var(--panel2);border:1px solid var(--line);cursor:pointer;transition:border-color .16s,background .16s}
+  .opt.on{border-color:rgba(61,220,151,.5);background:rgba(61,220,151,.06)}
+  .opt .k{width:24px;height:24px;border-radius:7px;flex:0 0 24px;border:1.4px solid #33404F;
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#04170F}
+  .opt.on .k{background:var(--accent);border-color:var(--accent)}
+  .opt .tx b{display:block;font-size:12px;font-weight:500}
+  .opt .tx span{display:block;font-size:9px;color:var(--t3);margin-top:4px}
+  .privacy{display:flex;gap:8px;align-items:flex-start;margin:8px 16px 0;font-size:9px;
+    line-height:1.7;color:var(--t3)}
+  .privacy i{width:5px;height:5px;border-radius:50%;background:var(--accent);flex:0 0 5px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="device">
+    <div class="app">
+
+      <a class="ob-back" href="trips.html" data-back="trips.html">‹</a>
+
+      <div class="hero">
+        <div class="logo"></div>
+        <h1>把散落的旅行照片<br>变成一张足迹地图</h1>
+        <p>自动按时间和地域，把手机 + 运动相机的素材<br>归组成一次次行程</p>
+      </div>
+
+      <div class="opts">
+        <div class="opt on" data-k="1">
+          <span class="k">✓</span>
+          <div class="tx"><b>读取手机相册</b><span>推荐 · 含 GPS 的照片可以直接上图</span></div>
+        </div>
+        <div class="opt on" data-k="2">
+          <span class="k">✓</span>
+          <div class="tx"><b>接入 SD 卡 / 文件夹</b><span>大疆 Action 5 Pro 的素材走这里</span></div>
+        </div>
+        <div class="opt" data-k="3">
+          <span class="k"></span>
+          <div class="tx"><b>先用示例数据看看</b><span>不动你的照片，直接体验界面</span></div>
+        </div>
+      </div>
+
+      <div class="privacy">
+        <i></i>
+        <div>所有照片只留在这台手机上，不上传任何服务器。App 只读取元数据，不改动原文件。</div>
+      </div>
+
+      <div style="flex:1"></div>
+
+      <div class="btnrow">
+        <a class="btn" href="scanning.html" id="start">开始扫描</a>
+      </div>
+
+    </div>
+  </div>
+  <p class="hint">P1 首次引导 · 勾选素材来源 →「开始扫描」进入 P2</p>
+</div>
+
+<script>
+(function(){
+  var opts = document.querySelectorAll('.opt');
+  for(var i = 0; i < opts.length; i++){
+    opts[i].addEventListener('click', function(){
+      this.classList.toggle('on');
+      var k = this.querySelector('.k');
+      k.textContent = this.classList.contains('on') ? '✓' : '';
+    });
+  }
+})();
+</script>
+<script src="nav.js"></script>
+<script src="statusbar.js"></script>
+</body>
+</html>

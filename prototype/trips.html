@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>我的行程</title>
+<link rel="stylesheet" href="proto.css">
+<script src="theme.js"></script>
+<style>
+  .notice{display:flex;align-items:center;gap:8px;margin:12px 16px 4px;padding:8px 12px;border-radius:10px;
+    text-decoration:none;background:rgba(255,180,84,.09);border:1px solid rgba(255,180,84,.3);
+    font-size:12px;color:var(--warn)}
+  .notice .dot{width:6px;height:6px;border-radius:50%;background:var(--warn);flex:0 0 6px}
+  .notice b{color:#FFD9A8}
+  .notice .go{margin-left:auto;font-size:12px;font-weight:700}
+
+  .trip{position:relative;background:var(--panel2);
+    border-radius:15px;overflow:hidden;margin:0 16px 12px}
+  .trip .hit{position:absolute;inset:0;z-index:1;text-decoration:none}
+  .trip:active{border-color:rgba(61,220,151,.35)}
+  .hbtn .ic{width:15px;height:15px;fill:currentColor;display:none}
+  body.view-card .hbtn .ic-list{display:block}
+  body.view-row .hbtn .ic-grid{display:block}
+
+  .ph .sun{height:26%;width:auto;aspect-ratio:1}
+
+  .cover{height:80px;display:grid;grid-template-columns:1.7fr 1fr;gap:2px;background:#0A0F14}
+  .cover .c2{display:grid;grid-template-rows:1fr 1fr;gap:2px}
+  .tinfo{padding:6px 12px 10px;position:relative}
+  .tinfo h5{margin:0;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;color:var(--t1)}
+  .trow{display:flex;align-items:center;gap:8px}
+  .imp{font-style:normal;font-size:9px;color:var(--accent);margin-left:3px}
+  .trow em{margin-left:auto;font-style:normal;font-size:9px;color:var(--t3);white-space:nowrap}
+  .dotmiss{width:6px;height:6px;border-radius:50%;background:var(--warn);flex:0 0 6px}
+  .meta{font-size:9px;color:var(--t3);margin-top:4px}
+  .wstrip{display:flex;align-items:center;gap:12px;margin-top:6px;
+    font-size:9px;color:var(--t3)}
+  .wd{display:flex;align-items:center;gap:3px;font-size:9px;color:var(--t3);white-space:nowrap}
+  .wnote{margin-left:auto;font-size:9px;color:var(--t3);white-space:nowrap}
+  .wd svg{width:11px;height:11px;stroke:var(--t2);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .wstrip .note{margin-left:auto;font-size:9px;color:var(--t3);padding-bottom:2px}
+  .addsheet,.newsheet{position:absolute;inset:0;z-index:90;display:none;align-items:flex-end;
+    background:rgba(3,6,9,.72);backdrop-filter:blur(4px)}
+  .addsheet.show,.newsheet.show{display:flex}
+  .acard{width:100%;background:var(--panel2);border-radius:18px 18px 0 0;
+    border-top:1px solid rgba(255,255,255,.1);padding:8px 0 16px}
+  .acard .ah{text-align:center;font-size:12px;color:var(--t3);padding:8px 0 6px}
+  .acard .ai{padding:13px 20px;border-bottom:1px solid rgba(35,44,57,.55);cursor:pointer}
+  .acard .ai:active{background:rgba(255,255,255,.05)}
+  .acard .ai b{display:block;font-size:13px;font-weight:600;color:var(--t1)}
+  .acard .ai em{display:block;font-style:normal;font-size:11px;color:var(--t3);margin-top:3px}
+  .acancel{margin:10px 16px 0;width:calc(100% - 32px);height:38px;border-radius:10px;
+    background:transparent;border:1px solid var(--line);color:var(--t3);
+    font-size:12px;font-family:inherit;cursor:pointer}
+
+  .newsheet{align-items:center;justify-content:center;padding:24px}
+  .ncard{width:100%;background:var(--panel2);border-radius:16px;padding:18px 16px 14px;
+    border:1px solid rgba(255,255,255,.1)}
+  .ncard .nh{font-size:15px;font-weight:600;margin-bottom:14px}
+  .nrow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .nrow span{flex:0 0 44px;font-size:12px;color:var(--t3)}
+  .nrow input{flex:1;min-width:0;height:34px;border-radius:9px;border:1px solid var(--line);
+    background:var(--panel);color:var(--t1);font-size:12px;padding:0 10px;
+    font-family:inherit;outline:none}
+  .nrow input:focus{border-color:rgba(61,220,151,.45)}
+  .nfoot{display:flex;gap:8px;margin-top:14px}
+  .nfoot button{flex:1;height:38px;border-radius:10px;font-family:inherit;font-size:12px;
+    cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--t2)}
+  .nfoot .o{background:var(--accent);border-color:var(--accent);color:#04170F;font-weight:600}
+
+  #list{transition:opacity .12s ease, transform .12s ease}
+  #list.swap-out{opacity:0;transform:translateY(6px)}
+  @keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  #list.swap-in > *{animation:cardIn .3s cubic-bezier(.22,1,.36,1) both}
+  #list.swap-in > *:nth-child(2){animation-delay:.03s}
+  #list.swap-in > *:nth-child(3){animation-delay:.06s}
+  #list.swap-in > *:nth-child(4){animation-delay:.09s}
+  #list.swap-in > *:nth-child(5){animation-delay:.12s}
+  #list.swap-in > *:nth-child(6){animation-delay:.15s}
+  @media (prefers-reduced-motion: reduce){
+    #list{transition:none}
+    #list.swap-in > *{animation:none}
+  }
+
+  .rtrip{position:relative;display:flex;align-items:center;gap:10px;
+    margin:0 16px 8px;padding:8px;border-radius:12px;background:var(--panel2)}
+  .rtrip .hit{position:absolute;inset:0;z-index:1}
+  .rtrip .thumb{width:60px;height:60px;border-radius:8px;overflow:hidden;flex:0 0 60px;position:relative}
+  .rtrip .tx{flex:1;min-width:0}
+  .rtrip .tx .b{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;
+    color:var(--t1);line-height:1.35;margin-bottom:2px}
+  .rtrip .tx .b em{margin-left:auto;font-style:normal;font-size:9px;color:var(--t3);font-weight:400;white-space:nowrap}
+  .rtrip .tx .q{font-size:9px;color:var(--t3);margin-top:2px;line-height:1.5;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .rtrip .tx .q.jn{font-size:12px;color:var(--t2);margin-top:4px;line-height:1.4}
+  .rtrip .tx .q.dim{opacity:.65}
+
+  .qrow{display:flex;align-items:center;gap:6px;margin-top:5px;
+    position:relative;z-index:2;text-decoration:none}
+  .qrow .ln{flex:1;min-width:0;font-size:12px;line-height:1.5;color:var(--t2);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .qrow.dim .ln{color:var(--t3);opacity:.75}
+  .qrow .ja{font-size:14px;line-height:1;color:var(--t3);flex:0 0 auto}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="device">
+    <div class="app">
+
+      <div class="head">
+        <div class="ht"><b style="font-size:15px">我的行程</b><span id="sub">—</span></div>
+        <button class="hbtn" id="addBtn" aria-label="新增">＋</button>
+        <button class="hbtn" id="viewBtn" aria-label="切换视图">
+          <svg class="ic ic-list" viewBox="0 0 16 16"><rect x="1.5" y="2" width="4" height="3.2" rx="1"/><rect x="7.5" y="3" width="7" height="1.6" rx="0.8"/><rect x="1.5" y="6.4" width="4" height="3.2" rx="1"/><rect x="7.5" y="7.4" width="7" height="1.6" rx="0.8"/><rect x="1.5" y="10.8" width="4" height="3.2" rx="1"/><rect x="7.5" y="11.8" width="7" height="1.6" rx="0.8"/></svg>
+          <svg class="ic ic-grid" viewBox="0 0 16 16"><rect x="1.5" y="1.5" width="5.6" height="5.6" rx="1.2"/><rect x="8.9" y="1.5" width="5.6" height="5.6" rx="1.2"/><rect x="1.5" y="8.9" width="5.6" height="5.6" rx="1.2"/><rect x="8.9" y="8.9" width="5.6" height="5.6" rx="1.2"/></svg>
+        </button>
+      </div>
+
+      <a class="notice" id="notice" href="remedy-page.html">
+        <span class="dot"></span>
+        <div><b id="missN">—</b>素材缺少位置信息</div>
+        <span class="go">去补全 ›</span>
+      </a>
+
+      <div class="scroll" style="padding-top:12px">
+        <div id="list"></div>
+        <div style="height:14px"></div>
+      </div>
+
+      <div class="addsheet" id="addsheet">
+        <div class="acard">
+          <div class="ah">新建</div>
+          <div class="ai" data-a="import"><b>导入素材</b><em>从相册或文件夹里挑照片</em></div>
+          <div class="ai" data-a="new"><b>新建旅程</b><em>先建一个空行程，照片随后补</em></div>
+          <div class="ai" data-a="settings"><b>设置</b><em>数据占用 · 关于旅迹</em></div>
+          <button class="acancel" id="aclose">取消</button>
+        </div>
+      </div>
+
+      <div class="newsheet" id="newsheet">
+        <div class="ncard">
+          <div class="nh">新建旅程</div>
+          <label class="nrow"><span>名称</span><input id="nName" type="text" placeholder="例如 川西 · 稻城"></label>
+          <label class="nrow"><span>开始</span><input id="nFrom" type="date"></label>
+          <label class="nrow"><span>结束</span><input id="nTo" type="date"></label>
+          <div class="nfoot">
+            <button class="g" id="nCancel">取消</button>
+            <button class="o" id="nOk">创建</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabbar">
+        <a class="tab on" href="trips.html"><i></i>行程</a>
+        <a class="tab" href="footprint.html"><i></i>地图</a>
+      </div>
+
+    </div>
+  </div>
+  <p class="hint">P3 行程列表 · 数据全部来自 data.js · 点卡片进地图，点「手记」进手记</p>
+</div>
+
+<script src="data.js"></script>
+<script src="lightbox.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var totalPhotos = 0, totalSize = 0, totalMissing = 0;
+  aliveTrips().forEach(function(t){
+    totalPhotos += t.dates.reduce(function(a, d){ return a + d.n; }, 0) + importedOf(t.id);
+    totalSize += parseFloat(t.size);
+    totalMissing += t.missing;
+  });
+  var alive = aliveTrips();
+  document.getElementById('sub').textContent =
+    alive.length + ' 次 · ' + totalPhotos.toLocaleString() + ' 张 · ' + totalSize.toFixed(1) + ' GB';
+  document.getElementById('missN').textContent = totalMissing + ' 张';
+
+  var firstMissing = aliveTrips().filter(function(t){ return t.missing > 0; })[0] || TRIPS[0];
+  document.getElementById('notice').setAttribute('href', 'remedy-page.html?trip=' + firstMissing.id);
+
+  function weatherStrip(t, note){
+    var html = '<div class="wstrip">';
+    t.weather.slice(0, 7).forEach(function(x){
+      html += '<span class="wd">' + x.d.slice(-2) + iconSvg(x.k, 11) + '</span>';
+    });
+    if(note) html += '<span class="wnote">' + note + '</span>';
+    html += '</div>';
+    return html;
+  }
+
+
+  /* 取某次行程手记正文的第一行；没有手记时回退到示例正文 */
+  function firstLineOf(trip){
+    var text = '';
+    try{
+      var raw = JSON.parse(localStorage.getItem('tripnest.journal.' + trip.id) || 'null');
+      if(raw && raw.body){
+        var box = document.createElement('div');
+        box.innerHTML = raw.body;
+        /* 第一行常常是裸文本节点（不带 div 包裹），必须用 childNodes 而不是 children */
+        var nodes = box.childNodes;
+        for(var i = 0; i < nodes.length; i++){
+          var t = (nodes[i].textContent || '').trim();
+          if(t){ text = t.split(String.fromCharCode(10))[0].trim(); break; }
+        }
+        if(!text) text = (box.textContent || '').trim();
+      }
+    }catch(e){}
+    if(!text && trip.body) text = String(trip.body).split(String.fromCharCode(10))[0];
+    return text;
+  }
+
+  var viewMode = 'card';
+  try { viewMode = localStorage.getItem('tripnest.view') || 'card'; } catch(e){}
+
+  function countOf(t){
+    return t.dates.reduce(function(a, d){ return a + d.n; }, 0) + importedOf(t.id);
+  }
+  function coverScenes(t){
+    var c = t.cover.slice();
+    var hist = coversOf(t.id);
+    for(var i = 0; i < 3 && i < hist.length; i++){
+      if(hist[i] && hist[i].sc) c[i] = hist[i].sc;
+    }
+    return c;
+  }
+  function missDot(t){
+    return t.missing ? '<span class="dotmiss" title="' + t.missing + ' 张缺位置"></span>' : '';
+  }
+  function impTag(t){
+    var n = importedOf(t.id);
+    return n ? '<i class="imp">+' + n + '</i>' : '';
+  }
+
+  function journalLine(t){
+    var fl = firstLineOf(t);
+    return '<a class="qrow' + (fl ? '' : ' dim') + '" href="timeline-page.html?trip=' + t.id + '">' +
+           '<span class="ln">' + (fl || '还没写手记') + '</span>' +
+           '<span class="ja">›</span></a>';
+  }
+
+  /* ---------- 卡片版 ---------- */
+  function cardHTML(t){
+    var c = coverScenes(t);
+    var h = '<div class="trip">';
+    h += '<a class="hit" href="c1-prototype.html?trip=' + t.id + '"></a>';
+    h += '<div class="cover">';
+    h += '<div class="ph ' + c[0] + '"><span class="sun"></span><span class="hill"></span><span class="hill2"></span></div>';
+    h += '<div class="c2">';
+    h += '<div class="ph ' + c[1] + '"><span class="sun"></span><span class="hill"></span></div>';
+    h += '<div class="ph ' + c[2] + '"><span class="sun"></span><span class="hill"></span></div>';
+    h += '</div></div>';
+    h += '<div class="tinfo">';
+    h += '<div class="trow"><h5>' + tripName(t) + missDot(t) + '</h5>' +
+         '<em>' + countOf(t).toLocaleString() + ' 张' + impTag(t) + '</em></div>';
+    h += weatherStrip(t, tripRange(t).slice(0, 7) + ' · ' + tripDays(t) + ' 天');
+    h += journalLine(t);
+    h += '</div></div>';
+    return h;
+  }
+
+  /* ---------- 列表版 ---------- */
+  function rowHTML(t){
+    var c = coverScenes(t);
+    var fl = firstLineOf(t);
+    var h = '<div class="rtrip">';
+    h += '<a class="hit" href="c1-prototype.html?trip=' + t.id + '"></a>';
+    h += '<div class="thumb ph ' + c[0] + '"><span class="sun"></span><span class="hill"></span><span class="hill2"></span></div>';
+    h += '<div class="tx">';
+    h += '<div class="b">' + tripName(t) + missDot(t) + '<em>' + countOf(t).toLocaleString() + ' 张' + impTag(t) + '</em></div>';
+    h += '<div class="q">' + tripRange(t) + ' · ' + tripDays(t) + ' 天</div>';
+    h += fl ? '<div class="q jn">' + fl + '</div>' : '<div class="q jn dim">还没写手记</div>';
+    h += '</div></div>';
+    return h;
+  }
+
+  /* 淡出 → 换内容 → 逐张淡入；首次渲染不做动画 */
+  function renderList(animated){
+    var box = document.getElementById('list');
+    var out = '';
+    aliveTrips().forEach(function(t){
+      out += (viewMode === 'row' ? rowHTML : cardHTML)(t);
+    });
+
+    if(!animated){ box.innerHTML = out; return; }
+
+    box.classList.remove('swap-in');
+    box.classList.add('swap-out');
+    setTimeout(function(){
+      box.innerHTML = out;
+      box.classList.remove('swap-out');
+      box.classList.add('swap-in');
+      setTimeout(function(){ box.classList.remove('swap-in'); }, 520);
+    }, 120);
+  }
+
+  function applyView(animated){
+    document.body.classList.toggle('view-card', viewMode === 'card');
+    document.body.classList.toggle('view-row', viewMode === 'row');
+    renderList(animated);
+  }
+
+  document.getElementById('viewBtn').addEventListener('click', function(){
+    viewMode = viewMode === 'card' ? 'row' : 'card';
+    try { localStorage.setItem('tripnest.view', viewMode); } catch(e){}
+    applyView(true);
+  });
+
+  applyView(false);
+
+  /* ---------- ＋：导入素材 / 新建旅程 ---------- */
+  var addsheet = document.getElementById('addsheet');
+  var newsheet = document.getElementById('newsheet');
+
+  document.getElementById('addBtn').addEventListener('click', function(){
+    addsheet.classList.add('show');
+  });
+  document.getElementById('aclose').addEventListener('click', function(){
+    addsheet.classList.remove('show');
+  });
+  addsheet.addEventListener('click', function(e){
+    if(e.target === addsheet) addsheet.classList.remove('show');
+  });
+
+  addsheet.addEventListener('click', function(e){
+    var item = e.target.closest('.ai');
+    if(!item) return;
+    addsheet.classList.remove('show');
+    if(item.dataset.a === 'import'){
+      location.href = 'import.html';
+      return;
+    }
+    if(item.dataset.a === 'settings'){
+      location.href = 'settings.html';
+      return;
+    }
+    /* 默认给三天，用户可改 */
+    var today = new Date();
+    var plus2 = new Date(today.getTime() + 2 * 86400000);
+    function iso(d){
+      return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+    }
+    document.getElementById('nName').value = '';
+    document.getElementById('nFrom').value = iso(today);
+    document.getElementById('nTo').value = iso(plus2);
+    newsheet.classList.add('show');
+  });
+
+  document.getElementById('nCancel').addEventListener('click', function(){
+    newsheet.classList.remove('show');
+  });
+  newsheet.addEventListener('click', function(e){
+    if(e.target === newsheet) newsheet.classList.remove('show');
+  });
+
+  document.getElementById('nOk').addEventListener('click', function(){
+    var nm = document.getElementById('nName').value.trim();
+    var from = document.getElementById('nFrom').value;
+    var to = document.getElementById('nTo').value;
+    if(!nm){ Lightbox.toast('给这次旅程起个名字'); return; }
+    if(!from || !to){ Lightbox.toast('请选择起止日期'); return; }
+    if(to < from){ Lightbox.toast('结束日期不能早于开始'); return; }
+
+    createTrip(nm, from, to);
+    newsheet.classList.remove('show');
+    renderList(true);
+    Lightbox.toast('已创建「' + nm + '」');
+  });
+})();
+</script>
+<script src="nav.js"></script>
+<script src="statusbar.js"></script>
+</body>
+</html>

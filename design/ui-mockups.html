@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>旅影 TripNest · 界面设计方案 v1</title>
+<style>
+  :root{
+    --bg:#080B10; --panel:#0F141B; --panel2:#141A23; --line:#212A36;
+    --t1:#E9EEF6; --t2:#8C97A9; --t3:#5C6675;
+    --accent:#3DDC97; --accent-d:#1F8A5F;
+    --warn:#FFB454; --info:#6C8CFF; --rose:#FF7A8A;
+    --r:14px;
+  }
+  *{box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  body{
+    margin:0;padding:48px 28px 80px;background:var(--bg);color:var(--t1);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(61,220,151,.07), transparent 60%);
+  }
+  .wrap{max-width:1280px;margin:0 auto}
+
+  /* ---------- 页头 ---------- */
+  .head{margin-bottom:44px;border-bottom:1px solid var(--line);padding-bottom:28px}
+  .kicker{font-size:12px;letter-spacing:.18em;color:var(--accent);text-transform:uppercase;margin-bottom:12px}
+  h1{font-size:34px;line-height:1.25;margin:0 0 12px;letter-spacing:-.5px}
+  h1 span{color:var(--t2);font-weight:400}
+  .sub{font-size:14px;color:var(--t2);line-height:1.8;max-width:820px;margin:0}
+
+  .tokens{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .tok{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);
+       border-radius:999px;padding:6px 14px 6px 8px;font-size:12px;color:var(--t2)}
+  .sw{width:16px;height:16px;border-radius:5px}
+
+  /* ---------- 参考图拆解 ---------- */
+  .audit{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:56px}
+  @media(max-width:760px){.audit{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px}
+  .card h3{margin:0 0 14px;font-size:14px;display:flex;align-items:center;gap:8px}
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+  .card ul{margin:0;padding-left:18px;font-size:13px;line-height:1.9;color:var(--t2)}
+  .card li strong{color:var(--t1);font-weight:600}
+
+  /* ---------- 方案区块 ---------- */
+  .scheme{margin-bottom:64px}
+  .shead{display:flex;align-items:baseline;gap:14px;margin-bottom:6px;flex-wrap:wrap}
+  .tag{font-size:11px;letter-spacing:.1em;color:var(--bg);background:var(--accent);
+       padding:3px 9px;border-radius:6px;font-weight:700}
+  .tag.dim{background:var(--info)}
+  .tag.gray{background:var(--t3);color:#fff}
+  .shead h2{font-size:22px;margin:0;letter-spacing:-.3px}
+  .shead .en{font-size:13px;color:var(--t3)}
+  .sdesc{font-size:13.5px;color:var(--t2);line-height:1.8;margin:8px 0 26px;max-width:900px}
+  .sdesc b{color:var(--t1);font-weight:600}
+
+  .screens{display:flex;gap:26px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+  .item{width:300px}
+  .cap{margin-top:14px;font-size:12px;color:var(--t3);line-height:1.7;text-align:center}
+  .cap b{display:block;color:var(--t1);font-size:13px;margin-bottom:3px;font-weight:600}
+
+  /* ---------- 手机 ---------- */
+  .phone{width:300px;height:640px;border-radius:42px;background:#000;
+         border:1px solid #2B3441;padding:7px;position:relative;
+         box-shadow:0 30px 70px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.03) inset}
+  .screen{width:100%;height:100%;border-radius:36px;overflow:hidden;position:relative;
+          background:var(--panel);display:flex;flex-direction:column}
+  .notch{position:absolute;top:7px;left:50%;transform:translateX(-50%);width:82px;height:20px;
+         background:#000;border-radius:0 0 14px 14px;z-index:60}
+
+  .status{height:34px;flex:0 0 34px;display:flex;align-items:flex-end;justify-content:space-between;
+          padding:0 20px 4px;font-size:11px;font-weight:600;color:#fff;position:relative;z-index:55}
+  .status.dark{color:var(--t1)}
+  .sicons{display:flex;align-items:center;gap:3px}
+  .sicons i{display:block;background:currentColor;border-radius:1px}
+  .sig{width:13px;height:9px;clip-path:polygon(0 100%,100% 0,100% 100%)}
+  .bat{width:18px;height:9px;border-radius:2.5px;background:none!important;border:1px solid currentColor;
+       position:relative;opacity:.9}
+  .bat::after{content:"";position:absolute;inset:1.5px;right:5px;background:currentColor;border-radius:1px}
+
+  /* ---------- 地图底纹（示意，非真实地理数据） ---------- */
+  .map{position:absolute;inset:0;overflow:hidden;
+    background:
+      radial-gradient(ellipse 65% 42% at 24% 26%, #17353F 0%, #0E1E26 58%, transparent 74%),
+      radial-gradient(ellipse 52% 46% at 80% 66%, #173A40 0%, #0C1A20 62%, transparent 76%),
+      radial-gradient(ellipse 40% 30% at 58% 12%, #14292F 0%, transparent 70%),
+      linear-gradient(170deg,#0A1418,#070D10 70%);
+  }
+  .map::before{content:"";position:absolute;inset:0;
+    background-image:
+      linear-gradient(rgba(96,200,210,.055) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(96,200,210,.055) 1px,transparent 1px);
+    background-size:38px 38px;}
+  .map::after{content:"";position:absolute;inset:-20%;
+    background:repeating-radial-gradient(ellipse 42% 34% at 30% 34%,
+      transparent 0 16px, rgba(110,215,200,.05) 16px 17px, transparent 17px 34px);}
+  .maptag{position:absolute;left:10px;bottom:8px;font-size:9px;color:rgba(140,151,169,.5);
+          letter-spacing:.02em;z-index:5}
+
+  /* 轨迹线 */
+  .route{position:absolute;inset:0;z-index:2}
+
+  /* 点位样式 */
+  .pin{position:absolute;border-radius:8px;border:1.5px solid rgba(255,255,255,.55);
+       box-shadow:0 6px 16px rgba(0,0,0,.6);z-index:10}
+  .pin::after{content:"";position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);
+    width:2px;height:6px;background:rgba(255,255,255,.5)}
+  .cluster{position:absolute;z-index:12;border-radius:999px;background:rgba(8,14,18,.82);
+    border:1px solid rgba(61,220,151,.55);backdrop-filter:blur(8px);
+    display:flex;align-items:center;gap:7px;padding:4px 11px 4px 4px;
+    box-shadow:0 10px 26px rgba(0,0,0,.55)}
+  .cluster .stack{display:flex}
+  .cluster .stack i{display:block;width:22px;height:22px;border-radius:6px;border:1px solid rgba(255,255,255,.35);margin-right:-8px}
+  .cluster .stack i:last-child{margin-right:0}
+  .cluster span{font-size:11px;font-weight:700;color:#EAF6F1;letter-spacing:.02em}
+  .cluster small{font-size:9px;color:var(--t2);display:block;font-weight:400;margin-top:-1px}
+
+  /* ---------- 通用 UI ---------- */
+  .row{display:flex;align-items:center}
+  .grow{flex:1;min-width:0}
+  .chip{font-size:10px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);
+        color:var(--t2);white-space:nowrap}
+  .chip.on{background:var(--t1);color:#0A0F14;border-color:var(--t1);font-weight:700}
+  .chip.acc{border-color:rgba(61,220,151,.5);color:var(--accent);background:rgba(61,220,151,.08)}
+  .chip.warn{border-color:rgba(255,180,84,.45);color:var(--warn);background:rgba(255,180,84,.08)}
+  .btn{height:38px;border-radius:11px;background:var(--accent);color:#04170F;font-size:12.5px;
+       font-weight:700;display:flex;align-items:center;justify-content:center}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--t2);font-weight:600}
+  .ph{position:relative;overflow:hidden;background:#25303F;border-radius:6px}
+  .ph::before{content:"";position:absolute;inset:0;background:linear-gradient(158deg,rgba(255,255,255,.20),transparent 52%)}
+  .ph::after{content:"";position:absolute;left:-15%;right:-15%;bottom:-22%;height:58%;
+             background:rgba(0,0,0,.26);transform:rotate(-5deg)}
+  .p1{background:linear-gradient(150deg,#2C5A6B,#162A36)}
+  .p2{background:linear-gradient(150deg,#6E5B39,#2C2719)}
+  .p3{background:linear-gradient(150deg,#3B4870,#191E2F)}
+  .p4{background:linear-gradient(150deg,#486B58,#1B2C25)}
+  .p5{background:linear-gradient(150deg,#6B4757,#2C1B22)}
+  .p6{background:linear-gradient(150deg,#57697A,#212B34)}
+  .p7{background:linear-gradient(150deg,#7A6A46,#332C1E)}
+  .p8{background:linear-gradient(150deg,#356B6B,#16292A)}
+  .p9{background:linear-gradient(150deg,#4E5686,#20233C)}
+  .p10{background:linear-gradient(150deg,#7A5560,#2E2026)}
+
+  .topbar{height:44px;flex:0 0 44px;display:flex;align-items:center;gap:10px;padding:0 16px;
+          position:relative;z-index:40}
+  .topbar h4{margin:0;font-size:15px;font-weight:700;letter-spacing:-.2px}
+  .icobtn{width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+          background:rgba(20,26,35,.8);border:1px solid var(--line);color:var(--t2);font-size:12px}
+  .glass{background:rgba(12,17,23,.78);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.07)}
+
+  .tabbar{height:56px;flex:0 0 56px;display:flex;border-top:1px solid var(--line);background:rgba(10,14,19,.95);z-index:40}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+       font-size:9.5px;color:var(--t3)}
+  .tab.on{color:var(--accent)}
+  .tab i{width:16px;height:16px;border:1.4px solid currentColor;border-radius:5px;opacity:.9}
+
+  /* 首页条幅 */
+  .banner{margin:0 14px 12px;padding:9px 12px;border-radius:11px;display:flex;align-items:center;gap:9px;
+    background:rgba(255,180,84,.09);border:1px solid rgba(255,180,84,.3);font-size:10.5px;color:var(--warn)}
+  .banner b{color:#FFD9A8;font-weight:700}
+
+  /* 行程卡 */
+  .trip{background:var(--panel2);border:1px solid var(--line);border-radius:15px;overflow:hidden;margin:0 14px 12px}
+  .cover{height:96px;display:grid;grid-template-columns:1.7fr 1fr;gap:2px;background:#0A0F14}
+  .cover .c2{display:grid;grid-template-rows:1fr 1fr;gap:2px}
+  .cover .ph{border-radius:0}
+  .tinfo{padding:10px 12px 12px}
+  .tinfo h5{margin:0 0 4px;font-size:13.5px;font-weight:700;letter-spacing:-.1px;
+            display:flex;align-items:center;gap:6px}
+  .badge{font-size:8.5px;font-weight:700;padding:2px 5px;border-radius:4px;
+         background:rgba(255,180,84,.16);color:var(--warn);letter-spacing:.02em}
+  .meta{font-size:10px;color:var(--t3);display:flex;gap:7px;align-items:center}
+  .meta em{font-style:normal;color:var(--t2)}
+
+  /* 图墙 */
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:2px}
+  .datehead{display:flex;align-items:center;justify-content:space-between;
+    padding:9px 14px 7px;font-size:11px;font-weight:700;color:var(--t1);
+    background:linear-gradient(180deg,var(--panel) 70%,transparent);position:sticky;top:0;z-index:20}
+  .datehead span{font-size:9.5px;color:var(--t3);font-weight:400}
+
+  .scrollbox{flex:1;overflow:hidden;position:relative}
+
+  /* 桌面端 */
+  .desk{width:100%;max-width:1140px;height:660px;border-radius:14px;border:1px solid #2B3441;
+        background:#0A0F14;overflow:hidden;display:flex;flex-direction:column;
+        box-shadow:0 40px 90px -40px rgba(0,0,0,.9)}
+  .menubar{height:34px;display:flex;align-items:center;gap:16px;padding:0 14px;border-bottom:1px solid var(--line);
+           font-size:11px;color:var(--t3)}
+  .dbody{flex:1;display:flex;min-height:0}
+  .dside{width:236px;border-right:1px solid var(--line);padding:12px 10px;overflow:hidden}
+  .dmain{flex:1;position:relative;min-width:0}
+  .dright{width:300px;border-left:1px solid var(--line);padding:14px;overflow:hidden}
+
+  .note{margin-top:34px;padding:16px 20px;border-radius:12px;background:var(--panel);
+        border:1px solid var(--line);border-left:3px solid var(--accent);font-size:12.5px;color:var(--t2);line-height:1.85}
+  .note b{color:var(--t1)}
+  .wc{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap}
+  .wc span{font-size:11px;padding:3px 9px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);color:var(--t3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ 页头 ============ -->
+  <div class="head">
+    <div class="kicker">TripNest · UI Design v1</div>
+    <h1>旅影 TripNest <span>／ 三套界面方案</span></h1>
+    <p class="sub">
+      定位：把安卓手机 + 大疆 Action 5 Pro 的几千张素材，自动归组成一次次行程，在地图上看见自己走过的地方。<br>
+      前提：手机端为主、电脑端为辅、纯本地、素材主要躺在手机相册里。
+    </p>
+    <div class="tokens">
+      <div class="tok"><span class="sw" style="background:#080B10"></span>#080B10 画布</div>
+      <div class="tok"><span class="sw" style="background:#141A23"></span>#141A23 卡片</div>
+      <div class="tok"><span class="sw" style="background:#3DDC97"></span>#3DDC97 主色·足迹</div>
+      <div class="tok"><span class="sw" style="background:#FFB454"></span>#FFB454 警示·缺坐标</div>
+      <div class="tok"><span class="sw" style="background:#6C8CFF"></span>#6C8CFF 视频标记</div>
+      <div class="tok"><span class="sw" style="background:#E9EEF6"></span>#E9EEF6 主文字</div>
+    </div>
+  </div>
+
+  <!-- ============ 参考图拆解 ============ -->
+  <div class="audit">
+    <div class="card">
+      <h3><span class="dot" style="background:var(--accent)"></span>值得抄的三点</h3>
+      <ul>
+        <li><strong>照片直接当点位</strong>：不用水滴针，用缩略图本身做 marker，一眼就知道"这里拍了什么"，比任何图标都直观。</li>
+        <li><strong>深色地图 + 一个高饱和强调色</strong>：照片在暗底上特别跳，视觉质感一下就上来了。</li>
+        <li><strong>顶部 KPI 大数字</strong>（13528.92 公里）：情绪价值极高，是这类产品最容易被截图分享的部分。</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="dot" style="background:var(--rose)"></span>不能照抄的三点</h3>
+      <ul>
+        <li><strong>"共 301486 个足迹点"是反面教材</strong>：几千个点位全铺上去只会糊成一片噪点。我们几千张照片必须做<strong>聚合</strong>，缩小看城市气泡，放大才裂开。</li>
+        <li><strong>地图做首页，没有"整理"的抓手</strong>：用户真正要干的是"把几千张归好组"，地图是结果不是入口。纯地图首页会让人不知道从哪下手。</li>
+        <li><strong>它回避了最难的问题</strong>：照片没坐标怎么办、多设备时间对不齐怎么办。这恰恰是我们最大的差异点，界面必须显性化。</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ 方案 A ============ -->
+  <section class="scheme">
+    <div class="shead"><span class="tag">方案 A</span><h2>地图优先</h2><span class="en">Map-First</span></div>
+    <p class="sdesc">
+      把参考图的构图做到极致：地图整屏铺满，底部横滑行程卡。适合<b>"看回忆"</b>的场景，视觉冲击最强。
+      但它把整理动作藏起来了，适合作为<b>第二个 tab</b>而不是首页。
+    </p>
+    <div class="screens">
+
+      <!-- A1 首页 -->
+      <div class="item">
+        <div class="phone"><div class="notch"></div>
+          <div class="screen" style="background:#070D10">
+            <div class="map"></div>
+            <div class="route">
+              <svg viewBox="0 0 300 640" fill="none" preserveAspectRatio="none">
+                <path d="M20 470 C 60 420, 70 360, 120 330 S 210 300, 232 240 250 150, 268 96"
+                      stroke="#3DDC97" stroke-width="1.8" stroke-dasharray="4 4" opacity=".75"/>
+                <circle cx="20" cy="470" r="3" fill="#3DDC97"/>
+                <circle cx="268" cy="96" r="3" fill="#3DDC97"/>
+              </svg>
+            </div>
+
+            <div class="status"><span>9:41</span><span class="sicons"><i class="sig"></i><i class="bat"></i></span></div>
+
+            <div class="topbar" style="position:relative;z-index:30">
+              <div class="row" style="gap:6px">
+                <span class="chip on">全部</span><span class="chip">2026</span><span class="chip">2025</span>
+              </div>
+              <div class="grow"></div>
+              <div class="icobtn">层</div>
+            </div>
+
+            <!-- 聚合气泡 -->
+            <div class="cluster" style="left:44px;top:150px">
+              <span class="stack"><i class="p4"></i><i class="p1"></i><i class="p3"></i></span>
+              <div><span>大理</span><small>842 张</small></div>
+            </div>
+            <div class="cluster" style="left:150px;top:248px">
+              <span class="stack"><i class="p2"></i><i class="p7"></i></span>
+              <div><span>丽江</span><small>316 张</small></div>
+            </div>
+            <div class="cluster" style="left:58px;top:352px">
+              <span class="stack"><i class="p9"></i><i class="p5"></i><i class="p8"></i></span>
+              <div><span>香格里拉</span><small>204 张</small></div>
+            </div>
+
+            <!-- 单张缩略图点位 -->
+            <div class="pin p1" style="left:196px;top:180px;width:34px;height:34px"></div>
+            <div class="pin p7" style="left:212px;top:214px;width:30px;height:30px"></div>
+            <div class="pin p3" style="left:96px;top:404px;width:36px;height:36px"></div>
+            <div class="pin p6" style="left:120px;top:436px;width:28px;height:28px"></div>
+
+            <div class="maptag">底图示意 · 正式版接入腾讯位置服务</div>
+
+            <div class="grow"></div>
+
+            <!-- 底部横滑行程卡 -->
+            <div style="position:relative;z-index:30;padding:0 0 12px">
+              <div class="row" style="padding:0 14px 8px;gap:6px">
+                <span style="font-size:10px;color:var(--t2)">这一次 · 5 天 · 842 张</span>
+                <div class="grow"></div>
+                <span style="font-size:10px;color:var(--accent)">全部 6 次</span>
+              </div>
+              <div class="row" style="gap:10px;padding-left:14px;overflow:hidden">
+                <div style="width:236px;flex:0 0 236px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.1)">
+                  <div style="height:64px;display:grid;grid-template-columns:1.6fr 1fr;gap:2px">
+                    <div class="ph p4" style="border-radius:0"></div>
+                    <div style="display:grid;grid-template-rows:1fr 1fr;gap:2px">
+                      <div class="ph p1" style="border-radius:0"></div>
+                      <div class="ph p2" style="border-radius:0"></div>
+                    </div>
+                  </div>
+                  <div style="background:rgba(10,14,19,.9);padding:8px 10px">
+                    <div style="font-size:12.5px;font-weight:700">云南 · 大理丽江</div>
+                    <div style="font-size:9.5px;color:var(--t3);margin-top:2px">2026.10.02 - 10.06 · 12.4 GB</div>
+                  </div>
+                </div>
+                <div style="width:120px;flex:0 0 120px;height:118px;border-radius:14px;border:1px solid rgba(255,255,255,.1);overflow:hidden;position:relative">
+                  <div class="ph p9" style="position:absolute;inset:0;border-radius:0"></div>
+                  <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(6,10,14,.95))"></div>
+                  <div style="position:absolute;left:10px;bottom:8px;font-size:11px;font-weight:700">青海环湖</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cap"><b>A1 · 地图首页</b>整屏地图 + 底部横滑行程卡，气泡显示地名与张数</div>
+      </div>
+
+      <!-- A2 放大态 -->
+      <div class="item">
+        <div class="phone"><div class="notch"></div>
+          <div class="screen" style="background:#070D10">
+            <div class="map" style="transform:scale(1.35)"></div>
+            <div class="status"><span>9:41</span><span class="sicons"><i class="sig"></i><i class="bat"></i></span></div>
+            <div class="topbar" style="position:relative;z-index:30">
+              <div class="icobtn">‹</div>
+              <div class="grow"></div>
+              <span class="chip">只看相机</span>
+            </div>
+
+            <div class="pin p4" style="left:60px;top:150px;width:56px;height:56px"></div>
+            <div class="pin p2" style="left:126px;top:184px;width:48px;height:48px"></div>
+            <div class="pin p1" style="left:74px;top:216px;width:52px;height:52px"></div>
+            <div class="pin p7" style="left:146px;top:250px;width:44px;height:44px"></div>
+            <div class="pin p3" style="left:56px;top:282px;width:50px;height:50px"></div>
+            <div class="pin p8" style="left:190px;top:150px;width:40px;height:40px"></div>
+            <div class="pin p6" style="left:196px;top:330px;width:46px;height:46px"></div>
+
+            <div style="position:absolute;left:60px;top:118px;font-size:9px;color:rgba(233,238,246,.8);
+                 background:rgba(6,10,14,.7);padding:2px 6px;border-radius:5px;z-index:14">10月2日 · 大理古城</div>
+
+            <div class="grow"></div>
+            <div style="position:relative;z-index:30;margin:0 12px 14px;border-radius:14px;padding:12px;
+                 background:rgba(12,17,23,.92);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.09)">
+              <div class="row" style="gap:10px">
+                <div class="ph p4" style="width:54px;height:54px;flex:0 0 54px"></div>
+                <div class="grow">
+                  <div style="font-size:11.5px;font-weight:700">洱海 · 环湖东路</div>
+                  <div style="font-size:9.5px;color:var(--t3);margin-top:3px">10月2日 14:32 · 手机 · 12 张</div>
+                  <div class="row" style="gap:5px;margin-top:6px">
+                    <span class="chip acc">真实 GPS</span><span class="chip">轨迹内</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cap"><b>A2 · 放大到点位</b>气泡裂成缩略图，点开半屏卡片；角标区分"真实 GPS / 推断位置"</div>
+      </div>
+
+      <!-- A3 抽屉 -->
+      <div class="item">
+        <div class="phone"><div class="notch"></div>
+          <div class="screen" style="background:#070D10">
+            <div style="position:absolute;inset:0">
+              <div class="map" style="transform:scale(1.1)"></div>
+              <div class="route">
+                <svg viewBox="0 0 300 300" fill="none" preserveAspectRatio="none">
+                  <path d="M30 200 C 70 170, 90 120, 150 110 S 230 80, 262 46"
+                        stroke="#3DDC97" stroke-width="2" opacity=".8"/>
+                </svg>
+              </div>
+              <div class="pin p4" style="left:96px;top:96px;width:40px;height:40px"></div>
+              <div class="pin p2" style="left:160px;top:66px;width:34px;height:34px"></div>
+            </div>
+            <div class="status"><span>9:41</span><span class="sicons"><i class="sig"></i><i class="bat"></i></span></div>
+
+            <!-- 抽屉 -->
+            <div style="position:absolute;left:0;right:0;bottom:0;top:210px;background:var(--panel);
+                 border-radius:20px 20px 0 0;border-top:1px solid rgba(255,255,255,.1);z-index:35;display:flex;flex-direction:column">
+              <div style="padding:8px 0 0;display:flex;justify-content:center">
+                <div style="width:34px;height:4px;border-radius:2px;background:#2C3644"></div>
+              </div>
+              <div style="padding:10px 14px 8px">
+                <div class="row">
+                  <div class="grow">
+                    <div style="font-size:15px;font-weight:700">云南 · 大理丽江</div>
+                    <div style="font-size:10px;color:var(--t3);margin-top:3px">10.02 - 10.06 · 5 天 · 842 张 · 12.4 GB</div>
+                  </div>
+                  <div class="icobtn">⋯</div>
+                </div>
+                <div class="row" style="gap:6px;margin-top:10px">
+                  <span class="chip on">全部</span><span class="chip">照片</span><span class="chip">视频</span>
+                  <span class="chip warn">无位置 32</span>
+                </div>
+              </div>
+              <div class="scrollbox">
+                <div class="datehead">10月2日 · 大理古城 <span>128 张</span></div>
+                <div class="grid3" style="padding:0 2px">
+                  <div class="ph p4" style="height:82px;border-radius:2px"></div>
+                  <div class="ph p2" style="height:82px;border-radius:2px"></div>
+                  <div class="ph p1" style="height:82px;border-radius:2px"></div>
+                  <div class="ph p6" style="height:82px;border-radius:2px"></div>
+                  <div class="ph p8" style="height:82px;border-radius:2px;position:relative">
+                    <span style="position:absolute;left:4px;top:4px;font-size:8px;background:rgba(108,140,255,.9);
+                          color:#fff;padding:1px 4px;border-radius:3px;z-index:2">视频 0:42</span>
+                  </div>
+                  <div class="ph p3" style="height:82px;border-radius:2px"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cap"><b>A3 · 行程聚焦抽屉</b>地图自动飞到该行程范围，下半屏展开图墙</div>
+      </div>
+
+    </div>
+    <div class="note">
+      <b>方案 A 的取舍</b>：最像参考图的升级版，分享截图极其好看。<b>但它不适合当首页</b> —— 用户打开 App 的第一诉求是"把这次旅行的照片整理好"，而不是"看地图"。建议把它作为<b>第二个 tab</b>，并保留底部横滑卡片作为地图的"上下文"。
+    </div>
+  </section>
+
+  <!-- ============ 方案 B ============ -->
+  <section class="scheme">
+    <div class="shead"><span class="tag dim">方案 B</span><h2>行程优先</h2><span class="en">Trip-First</span></div>
+    <p class="sdesc">
+      首页就是"我的行程"卡片流，地图退到第二个 tab。最贴合真实任务：<b>先整理、后欣赏</b>。
+      缺点是第一眼不够惊艳，少了点"哇"。
+    </p>
+    <div class="screens">
+
+      <!-- B1 首页 -->
+      <div class="item">
+        <div class="phone"><div class="notch"></div>
+          <div class="screen">
+            <div class="status dark"><span>9:41</span><span class="sicons"><i class="sig"></i><i class="bat"></i></span></div>
+            <div class="topbar">
+              <h4>我的行程</h4>
+              <div class="grow"></div>
+              <div class="icobtn">＋</div>
+              <div class="icobtn">地</div>
+            </div>
+
+            <div class="banner">
+              <span style="font-size:12px">!</span>
+              <div class="grow"><b>312 张</b>素材缺少位置信息</div>
+              <span style="font-size:10px;font-weight:700">去补全 ›</span>
+            </div>
+
+            <div class="scrollbox" style="padding-top:2px">
+              <div class="trip">
+                <div class="cover">
+                  <div class="ph p4"></div>
+                  <div class="c2"><div class="ph p2"></div><div class="ph p1"></div></div>
+                </div>
+                <div class="tinfo">
+                  <h5>云南 · 大理丽江 <span class="badge">缺位置</span></h5>
+                  <div class="meta"><em>2026.10.02 - 10.06</em><span>·</span>5 天<span>·</span>842 张<span>·</span>12.4 GB</div>
+                </div>
+              </div>
+
+              <div class="trip">
+                <div class="cover">
+                  <div class="ph p9"></div>
+                  <div class="c2"><div class="ph p3"></div><div class="ph p6"></div></div>
+                </div>
+                <div class="tinfo">
+                  <h5>青海 · 环湖西路</h5>
+                  <div class="meta"><em>2026.07.18 - 07.24</em><span>·</span>7 天<span>·</span>1,204 张<span>·</span>21.8 GB</div>
+                </div>
+              </div>
+
+              <div class="trip">
+                <div class="cover">
+                  <div class="ph p5"></div>
+                  <div class="c2"><div class="ph p10"></div><div class="ph p7"></div></div>
+                </div>
+                <div class="tinfo">
+                  <h5>福建 · 平潭</h5>
+                  <div class="meta"><em>2026.05.01 - 05.03</em><span>·</span>3 天<span>·</span>436 张<span>·</span>6.2 GB</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tabbar">
+              <div class="tab on"><i></i>行程</div>
+              <div class="tab"><i></i>地图</div>
+              <div class="tab"><i></i>设置</div>
+            </div>
+          </div>
+        </div>
+        <div class="cap"><b>B1 · 行程列表</b>卡片自动命名"省份·区域"，角标直接点出缺失坐标</div>
+      </div>
+
+      <!-- B2 详情 -->
+      <div class="item">
+        <div class="phone"><div class="notch"></div>
+          <div class="screen">
+            <div class="status dark"><span>9:41</span><span class="sicons"><i class="sig"></i><i class="bat"></i></span></div>
+            <div class="topbar">
+              <div class="icobtn">‹</div>
+              <div class="grow" style="text-align:center;font-size:14px;font-weight:700">云南 · 大理丽江</div>
+              <div class="icobtn">⋯</div>
+            </div>
+
+            <!-- 小地图条 -->
+            <div style="height:88px;margin:0 14px;border-radius:12px;overflow:hidden;position:relative;border:1px solid var(--line)">
+              <div class="map" style="transform:scale(1.2)"></div>
+              <svg viewBox="0 0 270 88" fill="none" preserveAspectRatio="none" style="position:absolute;inset:0">
+                <path d="M24 64 C 60 50, 80 30, 130 26 S 210 22, 246 14" stroke="#3DDC97" stroke-width="1.6" opacity=".8"/>
+              </svg>
+              <div class="pin p4" style="left:110px;top:18px;width:22px;height:22px;border-radius:6px"></div>
+              <div class="pin p2" style="left:180px;top:16px;width:20px;height:20px;border-radius:6px"></div>
+              <div style="position:absolute;right:8px;bottom:7px;font-size:8.5px;color:var(--t2);
+                   background:rgba(6,10,14,.7);padding:2px 6px;border-radius:5px">全屏地图 ›</div>
+            </div>
+
+            <div class="row" style="padding:10px 14px 6px;gap:8px">
+              <span style="font-size:9.5px;color:var(--t3)">5 天 · 842 张 · 主要在大理</span>
+              <div class="grow"></div>
+              <span style="font-size:9.5px;color:var(--accent);font-weight:700">合并 / 拆分</span>
+            </div>
+
+            <div class="row" style="padding:0 14px 8px;gap:6px">
+              <span class="chip on">全部 842</span><span class="chip">照片</span>
+              <span class="chip">视频 37</span><span class="chip warn">无位置 32</span>
+            </div>
+
+            <div class="scrollbox">
+              <div class="datehead">10月2日 · 大理古城 <span>128 张</span></div>
+              <div class="grid3" style="padding:0 2px">
+                <div class="ph p4" style="height:74px;border-radius:2px"></div>
+                <div class="ph p2" style="height:74px;border-radius:2px"></div>
+                <div class="ph p1" style="height:74px;border-radius:2px"></div>
+                <div class="ph p6" style="height:74px;border-radius:2px"></div>
+                <div class="ph p3" style="height:74px;border-radius:2px"></div>
+                <div class="ph p8" style="height:74px;border-radius:2px"></div>
+              </div>
+              <div class="datehead">10月3日 · 洱海环湖 <span>204 张</span></div>
+              <div class="grid3" style="padding:0 2px">
+                <div class="ph p1" style="height:74px;border-radius:2px"></div>
+                <div class="ph p9" style="height:74px;border-radius:2px"></div>
+                <div class="ph p7" style="height:74px;border-radius:2px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cap"><b>B2 · 行程详情</b>顶部一条小地图做定位锚，下面按日期吸入式分组</div>
+      </div>
+
+      <!-- B3 导入 -->
+      <div class="item">
+        <div class="phone"><div class="notch"></div>
+          <div class="screen">
+            <div class="status dark"><span>9:41</span><span class="sicons"><i class="sig"></i><i class="bat"></i></span></div>
+            <div class="topbar"><div class="grow"></div><div class="icobtn">×</div></div>
+
+            <div style="padding:6px 24px 0;text-align:center">
+              <div style="width:150px;height:150px;margin:8px auto 20px;position:relative">
+                <svg viewBox="0 0 120 120" style="width:100%;height:100%;transform:rotate(-90deg)">
+                  <circle cx="60" cy="60" r="52" stroke="#1B2430" stroke-width="8" fill="none"/>
+                  <circle cx="60" cy="60" r="52" stroke="#3DDC97" stroke-width="8" fill="none"
+                          stroke-linecap="round" stroke-dasharray="327" stroke-dashoffset="118"/>
+                </svg>
+                <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                  <div style="font-size:26px;font-weight:700;letter-spacing:-1px">64%</div>
+                  <div style="font-size:9.5px;color:var(--t3);margin-top:2px">1,284 / 2,012</div>
+                </div>
+              </div>
+              <div style="font-size:14px;font-weight:700">正在读取素材</div>
+              <div style="font-size:11px;color:var(--t3);line-height:1.7;margin-top:6px">
+                只读元数据，不改动原文件<br>大视频仅取首帧，不做转码
+              </div>
+            </div>
+
+            <div style="margin:18px 16px 0;border-radius:12px;border:1px solid var(--line);overflow:hidden">
+              <div class="row" style="padding:10px 12px;border-bottom:1px solid var(--line);gap:9px">
+                <span style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></span>
+                <div class="grow" style="font-size:11px">手机相册 · Xiaomi 14</div>
+                <span style="font-size:10px;color:var(--t3)">1,206</span>
+              </div>
+              <div class="row" style="padding:10px 12px;gap:9px">
+                <span style="width:6px;height:6px;border-radius:50%;background:var(--info)"></span>
+                <div class="grow" style="font-size:11px">SD 卡 · Osmo Action 5 Pro</div>
+                <span style="font-size:10px;color:var(--t3)">78 / 806</span>
+              </div>
+            </div>
+
+            <div style="margin:14px 16px 0;padding:10px 12px;border-radius:10px;background:var(--panel2);border:1px solid var(--line)">
+              <div style="font-size:9.5px;color:var(--t3);margin-bottom:6px">正在处理</div>
+              <div style="font-size:10.5px;color:var(--t2);line-height:1.9">
+                DJI_0284.MP4 · 已解析 SRT 轨迹<br>
+                IMG_20261002_143201.jpg · 已读取 GPS
+              </div>
+            </div>
+
+            <div class="grow"></div>
+            <div class="row" style="gap:10px;padding:0 16px 20px">
+              <div class="btn ghost" style="flex:1">取消</div>
+              <div class="btn" style="flex:1.4">后台继续</div>
+            </div>
+          </div>
+        </div>
+        <div class="cap"><b>B3 · 导入进度</b>明确告知"只读元数据、不转码"，降低对大文件的心理压力</div>
+      </div>
+
+    </div>
+    <div class="note">
+      <b>方案 B 的取舍</b>：任务对得上，但少了惊喜。<b>它是"工具"而不是"作品"</b> —— 用户整理完不会想截图发朋友圈。如果产品目标是"好用"，选它；如果还想靠分享传播，需要在详情页补一张"行程足迹卡"。
+    </div>
+  </section>
+
+  <!-- ============ 方案 C ============ -->
+  <section class="scheme">
+    <div class="shead"><span class="tag">方案 C · 推荐</span><h2>地图 × 时间轴 联动</h2><span class="en">Timeline × Map</span></div>
+    <p class="sdesc">
+      上半屏地图、下半屏时间轴图墙，两边<b>实时联动</b>：滚时间轴，地图跟着飞到当天位置；点地图上一簇照片，下面自动滚到那一天。
+      Google Photos 和 Immich 都没做好这件事 —— 地图好看但找不到照片，是它们共同的短板。
+    </p>
+    <div class="screens">
+
+      <!-- C1 首页 -->
+      <div class="item">
+        <div class="phone"><div class="notch"></div>
+          <div class="screen">
+            <div style="height:266px;position:relative;flex:0 0 266px">
+              <div class="map"></div>
+              <svg viewBox="0 0 300 266" fill="none" preserveAspectRatio="none" style="position:absolute;inset:0;z-index:2">
+                <path d="M18 200 C 56 168, 78 118, 136 104 S 220 78, 254 34"
+                      stroke="#3DDC97" stroke-width="1.8" opacity=".7" stroke-dasharray="5 4"/>
+              </svg>
+              <div class="status"><span>9:41</span><span class="sicons"><i class="sig"></i><i class="bat"></i></span></div>
+
+              <div class="topbar" style="position:relative;z-index:30">
+                <div class="glass" style="border-radius:10px;padding:6px 10px;font-size:11px;font-weight:700">
+                  云南 · 大理丽江
+                </div>
+                <div class="grow"></div>
+                <div class="icobtn">层</div>
+              </div>
+
+              <div class="cluster" style="left:24px;top:112px">
+                <span class="stack"><i class="p4"></i><i class="p2"></i></span>
+                <div><span>大理</span><small>842</small></div>
+              </div>
+              <div class="pin p7" style="left:150px;top:96px;width:30px;height:30px"></div>
+              <div class="pin p1" style="left:178px;top:60px;width:26px;height:26px"></div>
+              <div class="pin p9" style="left:118px;top:132px;width:28px;height:28px"></div>
+
+              <!-- 联动指示 -->
+              <div style="position:absolute;left:0;right:0;bottom:0;height:38px;
+                   background:linear-gradient(180deg,transparent,rgba(15,20,27,.96));z-index:8"></div>
+              <div style="position:absolute;left:14px;bottom:9px;z-index:12;font-size:9px;color:var(--accent);font-weight:700">
+                10月3日 · 地图已跟随
+              </div>
+              <div class="maptag" style="bottom:12px">底图示意 · 正式版接入腾讯位置服务</div>
+            </div>
+
+            <div style="flex:1;display:flex;flex-direction:column;min-height:0;background:var(--panel)">
+              <div class="row" style="padding:8px 14px 6px;gap:6px;border-top:1px solid var(--line)">
+                <span class="chip on">第 3 天</span><span class="chip">全部 842</span>
+                <div class="grow"></div>
+                <span style="font-size:9px;color:var(--t3)">204 张</span>
+              </div>
+              <div class="scrollbox">
+                <div class="datehead">10月3日 · 洱海环湖 <span>204 张</span></div>
+                <div class="grid4" style="padding:0 2px">
+                  <div class="ph p1" style="height:58px;border-radius:2px"></div>
+                  <div class="ph p4" style="height:58px;border-radius:2px"></div>
+                  <div class="ph p9" style="height:58px;border-radius:2px"></div>
+                  <div class="ph p7" style="height:58px;border-radius:2px"></div>
+                  <div class="ph p2" style="height:58px;border-radius:2px"></div>
+                  <div class="ph p6" style="height:58px;border-radius:2px"></div>
+                  <div class="ph p8" style="height:58px;border-radius:2px"></div>
+                  <div class="ph p3" style="height:58px;border-radius:2px"></div>
+                  <div class="ph p5" style="height:58px;border-radius:2px"></div>
+                  <div class="ph p10" style="height:58px;border-radius:2px"></div>
+                  <div class="ph p1" style="height:58px;border-radius:2px"></div>
+                  <div class="ph p4" style="height:58px;border-radius:2px"></div>
+                </div>
+                <div class="datehead" style="opacity:.45">10月4日 · 双廊 <span>96 张</span></div>
+              </div>
+            </div>
+
+            <div class="tabbar">
+              <div class="tab"><i></i>行程</div>
+              <div class="tab on"><i></i>地图</div>
+              <div class="tab"><i></i>设置</div>
+            </div>
+          </div>
+        </div>
+        <div class="cap"><b>C1 · 联动主界面</b>滚动下方时间轴 → 地图自动飞到当天位置；点地图气泡 → 下方跳到对应日期</div>
+      </div>
+
+      <!-- C2 补救 -->
+      <div class="item">
+        <div class="phone"><div class="notch"></div>
+          <div class="screen">
+            <div class="status dark"><span>9:41</span><span class="sicons"><i class="sig"></i><i class="bat"></i></span></div>
+            <div class="topbar">
+              <div class="icobtn">‹</div>
+              <div class="grow" style="text-align:center;font-size:14px;font-weight:700">坐标补救</div>
+              <div class="icobtn">?</div>
+            </div>
+
+            <div style="margin:2px 14px 12px;padding:11px 12px;border-radius:11px;
+                 background:rgba(255,180,84,.08);border:1px solid rgba(255,180,84,.28)">
+              <div style="font-size:11px;color:#FFD9A8;font-weight:700">312 张素材没有坐标</div>
+              <div style="font-size:9.5px;color:rgba(255,217,168,.6);margin-top:3px;line-height:1.7">
+                Action 5 Pro 机身无 GPS 模块，<br>可用同一时段的手机照片推算
+              </div>
+            </div>
+
+            <!-- 时钟校正 -->
+            <div style="margin:0 14px 12px;padding:12px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)">
+              <div class="row">
+                <div style="font-size:10.5px;font-weight:700">设备时钟校正</div>
+                <div class="grow"></div>
+                <span class="chip warn">已识别 偏差 +12 分钟</span>
+              </div>
+              <div style="margin-top:12px;position:relative;height:4px;border-radius:2px;background:#20293A">
+                <div style="position:absolute;left:0;top:0;height:100%;width:58%;border-radius:2px;background:var(--accent)"></div>
+                <div style="position:absolute;left:58%;top:50%;transform:translate(-50%,-50%);
+                     width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--accent)"></div>
+              </div>
+              <div class="row" style="margin-top:8px;font-size:9px;color:var(--t3)">
+                <span>-60 分</span><div class="grow"></div><span>0</span><div class="grow"></div><span>+60 分</span>
+              </div>
+              <div style="margin-top:9px;font-size:9.5px;color:var(--t2)">调整后：可推断素材从 280 → <span style="color:var(--accent);font-weight:700">304</span> 张</div>
+            </div>
+
+            <div class="row" style="padding:0 14px 8px;gap:6px">
+              <span class="chip on">可推断 280</span><span class="chip">无法推断 32</span>
+              <div class="grow"></div>
+              <span style="font-size:9.5px;color:var(--accent);font-weight:700">全选</span>
+            </div>
+
+            <div class="scrollbox">
+              <div style="padding:0 14px">
+                <div class="row" style="gap:9px;padding:8px 0;border-bottom:1px solid rgba(33,42,54,.7)">
+                  <span style="width:15px;height:15px;border-radius:5px;background:var(--accent);
+                        color:#04170F;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700">v</span>
+                  <div class="ph p2" style="width:38px;height:38px;flex:0 0 38px"></div>
+                  <div class="grow">
+                    <div style="font-size:10.5px;font-weight:600">DJI_0284.MP4</div>
+                    <div style="font-size:9px;color:var(--t3);margin-top:2px">14:32:05 · 推断：洱海东岸</div>
+                  </div>
+                  <span class="chip acc" style="font-size:8.5px">采纳</span>
+                </div>
+                <div class="row" style="gap:9px;padding:8px 0;border-bottom:1px solid rgba(33,42,54,.7)">
+                  <span style="width:15px;height:15px;border-radius:5px;background:var(--accent);
+                        color:#04170F;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700">v</span>
+                  <div class="ph p7" style="width:38px;height:38px;flex:0 0 38px"></div>
+                  <div class="grow">
+                    <div style="font-size:10.5px;font-weight:600">DJI_0285.JPG</div>
+                    <div style="font-size:9px;color:var(--t3);margin-top:2px">14:36:11 · 推断：洱海东岸</div>
+                  </div>
+                  <span class="chip acc" style="font-size:8.5px">采纳</span>
+                </div>
+                <div class="row" style="gap:9px;padding:8px 0">
+                  <span style="width:15px;height:15px;border-radius:5px;border:1.4px solid #33404F"></span>
+                  <div class="ph p6" style="width:38px;height:38px;flex:0 0 38px"></div>
+                  <div class="grow">
+                    <div style="font-size:10.5px;font-weight:600">DJI_0301.JPG</div>
+                    <div style="font-size:9px;color:var(--t3);margin-top:2px">次日 08:02 · 无参照</div>
+                  </div>
+                  <span class="chip" style="font-size:8.5px">手动打点</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="padding:10px 14px 16px">
+              <div class="btn">采纳 280 张建议位置</div>
+            </div>
+          </div>
+        </div>
+        <div class="cap"><b>C2 · 坐标补救</b>这是本产品的护城河页面：时钟校正 + 时间轴推算，把"没 GPS"变成"有位置"</div>
+      </div>
+
+      <!-- C3 查看器 -->
+      <div class="item">
+        <div class="phone"><div class="notch"></div>
+          <div class="screen" style="background:#05080B">
+            <div class="ph p4" style="position:absolute;inset:0;border-radius:0"></div>
+            <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,8,11,.75),transparent 25%,transparent 55%,rgba(4,8,11,.96))"></div>
+            <div class="status"><span>9:41</span><span class="sicons"><i class="sig"></i><i class="bat"></i></span></div>
+            <div class="topbar" style="position:relative;z-index:30">
+              <div class="icobtn">‹</div><div class="grow"></div>
+              <div class="icobtn">⋯</div>
+            </div>
+            <div class="grow"></div>
+
+            <div style="position:relative;z-index:30;padding:0 18px 18px">
+              <div style="font-size:11px;color:rgba(233,238,246,.62);margin-bottom:10px">
+                10月3日 14:32 · Osmo Action 5 Pro
+              </div>
+              <div class="row" style="gap:8px;margin-bottom:14px">
+                <span class="chip acc">真实 GPS</span>
+                <span class="chip">洱海 · 25.61°N 100.19°E</span>
+              </div>
+              <div style="font-size:10px;color:rgba(140,151,169,.85);line-height:1.9;margin-bottom:16px">
+                1/500s · f/2.8 · ISO 100 · 24mm<br>
+                SRT 轨迹：27.4 km/h · 海拔 1,972 m
+              </div>
+              <div class="row" style="gap:9px">
+                <div class="btn" style="flex:1">分享（已脱敏）</div>
+                <div class="btn ghost" style="flex:0 0 60px">地图</div>
+              </div>
+              <div style="margin-top:12px;font-size:9px;color:rgba(92,102,117,.9);line-height:1.6">
+                位置已按"家附近模糊化"规则处理，导出时不写入 GPS
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cap"><b>C3 · 照片查看器</b>把 SRT 的速度/海拔也显示出来，让运动相机的数据变成看得见的价值</div>
+      </div>
+
+    </div>
+    <div class="note">
+      <b>为什么推荐 C</b>：它同时满足了两个真实动作 —— <b>"我要整理"</b>（下方图墙能直接看、能筛、能分组）和 <b>"我想看我去过哪"</b>（上方地图）。联动是整个设计里最便宜的高光：实现成本只是一行"滚动位置 → 地图中心点"的映射，但体验差别巨大。
+    </div>
+  </section>
+
+  <!-- ============ 桌面端 ============ -->
+  <section class="scheme">
+    <div class="shead"><span class="tag gray">方案 D</span><h2>电脑端工作台</h2><span class="en">Desktop Archive</span></div>
+    <p class="sdesc">
+      你把电脑端定位成"以后归档用"，所以它不该是手机端的放大版，而应该是<b>更重的操作台</b>：批量导入整张 SD 卡、跨行程合并、批量去重清理、导出归档目录结构。
+    </p>
+
+    <div class="desk">
+      <div class="menubar">
+        <span style="color:var(--t1);font-weight:700">旅影</span>
+        <span>文件</span><span>导入</span><span>整理</span><span>视图</span>
+        <div class="grow" style="flex:1"></div>
+        <span>已连接 · 本地库 42,318 张 / 486 GB</span>
+      </div>
+      <div class="dbody">
+
+        <!-- 左侧 -->
+        <div class="dside">
+          <div class="row" style="justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:11px;font-weight:700">行程库</span>
+            <span style="font-size:9.5px;color:var(--t3)">6</span>
+          </div>
+          <div style="background:rgba(61,220,151,.1);border:1px solid rgba(61,220,151,.28);
+               border-radius:9px;padding:8px 9px;margin-bottom:6px">
+            <div style="font-size:11px;font-weight:700;color:#CFF7E4">云南 · 大理丽江</div>
+            <div style="font-size:9px;color:var(--t3);margin-top:3px">842 张 · 12.4 GB</div>
+          </div>
+          <div style="padding:8px 9px">
+            <div style="font-size:11px;color:var(--t2)">青海 · 环湖西路</div>
+            <div style="font-size:9px;color:var(--t3);margin-top:3px">1,204 张 · 21.8 GB</div>
+          </div>
+          <div style="padding:8px 9px">
+            <div style="font-size:11px;color:var(--t2)">福建 · 平潭</div>
+            <div style="font-size:9px;color:var(--t3);margin-top:3px">436 张 · 6.2 GB</div>
+          </div>
+          <div style="padding:8px 9px">
+            <div style="font-size:11px;color:var(--t2)">浙江 · 四明山</div>
+            <div style="font-size:9px;color:var(--t3);margin-top:3px">318 张 · 4.1 GB</div>
+          </div>
+
+          <div style="height:1px;background:var(--line);margin:12px 0"></div>
+          <div style="font-size:10px;color:var(--t3);margin-bottom:9px">待处理</div>
+          <div class="row" style="gap:7px;margin-bottom:8px;font-size:10px;color:var(--t2)">
+            <span style="width:5px;height:5px;border-radius:50%;background:var(--warn)"></span>缺坐标 312 张
+          </div>
+          <div class="row" style="gap:7px;margin-bottom:8px;font-size:10px;color:var(--t2)">
+            <span style="width:5px;height:5px;border-radius:50%;background:var(--info)"></span>疑似重复 486 张
+          </div>
+          <div class="row" style="gap:7px;font-size:10px;color:var(--t2)">
+            <span style="width:5px;height:5px;border-radius:50%;background:var(--rose)"></span>模糊 51 张
+          </div>
+        </div>
+
+        <!-- 中间地图 -->
+        <div class="dmain">
+          <div class="map"></div>
+          <svg viewBox="0 0 600 620" fill="none" preserveAspectRatio="none" style="position:absolute;inset:0;z-index:2">
+            <path d="M60 470 C 140 400, 190 280, 300 250 S 470 190, 540 96"
+                  stroke="#3DDC97" stroke-width="2" opacity=".72" stroke-dasharray="6 5"/>
+            <circle cx="60" cy="470" r="4" fill="#3DDC97"/>
+            <circle cx="540" cy="96" r="4" fill="#3DDC97"/>
+          </svg>
+          <div class="cluster" style="left:60px;top:300px">
+            <span class="stack"><i class="p4"></i><i class="p2"></i><i class="p1"></i></span>
+            <div><span>大理</span><small>842 张</small></div>
+          </div>
+          <div class="cluster" style="left:250px;top:214px">
+            <span class="stack"><i class="p7"></i><i class="p9"></i></span>
+            <div><span>丽江</span><small>316 张</small></div>
+          </div>
+          <div class="pin p1" style="left:186px;top:262px;width:30px;height:30px"></div>
+          <div class="pin p9" style="left:300px;top:170px;width:26px;height:26px"></div>
+          <div class="pin p6" style="left:372px;top:150px;width:24px;height:24px"></div>
+          <div class="maptag">底图示意 · 正式版接入腾讯位置服务</div>
+
+          <div class="glass" style="position:absolute;left:14px;top:14px;border-radius:10px;padding:8px 11px;z-index:20">
+            <div style="font-size:10.5px;font-weight:700">云南 · 大理丽江</div>
+            <div style="font-size:9px;color:var(--t3);margin-top:2px">2026.10.02 - 10.06 · 5 天 · 轨迹 214 km</div>
+          </div>
+          <div class="glass" style="position:absolute;right:14px;top:14px;border-radius:10px;padding:6px;z-index:20;display:flex;gap:6px">
+            <span class="chip on">地图</span><span class="chip">图墙</span><span class="chip">统计</span>
+          </div>
+        </div>
+
+        <!-- 右侧 -->
+        <div class="dright">
+          <div style="font-size:10px;color:var(--t3);margin-bottom:8px">本次行程 · 按日期</div>
+          <div style="font-size:11px;font-weight:700;margin-bottom:3px">10月3日 · 洱海环湖</div>
+          <div style="font-size:9px;color:var(--t3);margin-bottom:10px">204 张 · 28 km</div>
+          <div class="grid3" style="gap:3px">
+            <div class="ph p1" style="height:56px"></div>
+            <div class="ph p4" style="height:56px"></div>
+            <div class="ph p9" style="height:56px"></div>
+            <div class="ph p2" style="height:56px"></div>
+            <div class="ph p7" style="height:56px"></div>
+            <div class="ph p6" style="height:56px"></div>
+            <div class="ph p8" style="height:56px"></div>
+            <div class="ph p3" style="height:56px"></div>
+            <div class="ph p5" style="height:56px"></div>
+          </div>
+
+          <div style="height:1px;background:var(--line);margin:16px 0 12px"></div>
+          <div style="font-size:10px;color:var(--t3);margin-bottom:9px">批量操作</div>
+          <div class="row" style="gap:7px;flex-wrap:wrap">
+            <span class="chip">去重 486</span><span class="chip">补坐标 312</span>
+            <span class="chip">模糊 51</span><span class="chip">导出归档</span>
+          </div>
+
+          <div style="margin-top:16px;padding:11px;border-radius:10px;background:var(--panel2);border:1px solid var(--line)">
+            <div style="font-size:9.5px;color:var(--t3);margin-bottom:5px">归档目录预览</div>
+            <div style="font-size:9.5px;color:var(--t2);line-height:1.9;font-family:ui-monospace,monospace">
+              2026/10-云南大理丽江/<br>
+              &nbsp;&nbsp;03-洱海环湖/<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;IMG_1432.jpg
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="note">
+      <b>电脑端的差异化</b>：不做"另一个看图工具"，只做手机端做不了的三件事 —— <b>整卡批量导入</b>、<b>跨行程批量合并/去重</b>、<b>导出成规范的本地归档目录</b>（`2026/10-云南大理丽江/03-洱海环湖/`）。这样两端不会互相抢活。
+    </div>
+  </section>
+
+  <!-- ============ 结论 ============ -->
+  <div class="card" style="margin-top:10px">
+    <h3><span class="dot" style="background:var(--accent)"></span>我的建议</h3>
+    <ul style="line-height:2">
+      <li><strong>主结构选 C</strong>：地图 × 时间轴联动，信息密度和惊喜感平衡得最好，也是唯一把"整理"和"欣赏"放在同一屏的方案。</li>
+      <li><strong>把 A 的地图页单独抽出来当第二个 tab</strong>：全屏沉浸模式，用于分享截图和"我就想看看"的时刻。两者不冲突，可以共存。</li>
+      <li><strong>B 的行程卡片样式直接复用</strong>到 C 的"行程"tab 里，作为列表视图。</li>
+      <li><strong>D 只做三件事</strong>：批量导入、批量整理、导出归档。不要试图在电脑端重做一遍看图体验。</li>
+    </ul>
+    <div class="wc">
+      <span>配色：深色为主，照片在暗底上更跳</span>
+      <span>圆角：卡片 14-15px，按钮 11px</span>
+      <span>字体：系统字 + 等宽数字</span>
+      <span>地图底图：腾讯位置服务（合规）</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

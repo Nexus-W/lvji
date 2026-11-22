@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>足迹</title>
+<link rel="stylesheet" href="proto.css">
+<script src="theme.js"></script>
+<style>
+  .mapwrap2{position:relative;margin:12px 16px 0;border-radius:16px;overflow:hidden;
+    background:#07100F;border:1px solid var(--line);flex:0 0 auto;height:min(46vh,340px)}
+  .mapwrap2 svg{display:block;width:100%;height:100%}
+  .mapwrap2 .land{fill:rgba(130,180,190,.26)}
+  .mapwrap2 .city{fill:#3DDC97}
+  .mapwrap2 .halo{fill:rgba(61,220,151,.16)}
+  .mapwrap2 .clabel{fill:#EAFFF6;font-family:sans-serif;font-weight:600;paint-order:stroke;
+    stroke:#07100F;stroke-linejoin:round}
+  .mapctl{position:absolute;right:10px;bottom:10px;display:flex;gap:8px}
+  .mapctl button{height:28px;padding:0 12px;border-radius:9px;font-family:inherit;font-size:12px;
+    font-weight:600;cursor:pointer;color:var(--t2);
+    background:rgba(10,15,20,.82);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px)}
+  .mapctl button.on{color:#04170F;background:var(--accent);border-color:var(--accent)}
+  .legend{position:absolute;left:12px;top:10px;font-size:9px;color:rgba(200,220,230,.5);
+    background:rgba(5,11,15,.6);padding:4px 8px;border-radius:6px}
+
+  .sum{display:flex;gap:16px;padding:12px 16px 4px;flex:0 0 auto}
+  .sum div b{display:block;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+  .sum div span{display:block;font-size:9px;color:var(--t3);margin-top:2px}
+
+  .clist{flex:1;overflow-y:auto;scrollbar-width:none;padding:4px 16px 12px}
+  .clist::-webkit-scrollbar{display:none}
+  .crow{display:flex;align-items:center;gap:8px;padding:12px 4px;border-bottom:1px solid rgba(35,44,57,.55);
+    text-decoration:none;color:inherit}
+  .crow:last-child{border-bottom:none}
+  .crow .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:0 0 7px;
+    box-shadow:0 0 0 4px rgba(61,220,151,.12)}
+  .crow .tx{flex:1;min-width:0}
+  .crow .tx b{display:block;font-size:12px;font-weight:600}
+  .crow .tx span{display:block;font-size:9px;color:var(--t3);margin-top:2px}
+  .crow .n{font-size:12px;color:var(--t3);font-variant-numeric:tabular-nums}
+  .empty2{text-align:center;font-size:12px;color:var(--t3);line-height:1.9;padding:24px 20px}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="device">
+    <div class="app">
+
+      <div class="head">
+        <div class="ht"><b style="font-size:15px">足迹</b><span id="sumline">—</span></div>
+      </div>
+
+      <div class="mapwrap2">
+        <svg id="wmap" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="legend">点亮 = 去过</div>
+        <div class="mapctl">
+          <button data-z="world">世界</button>
+          <button data-z="china" class="on">中国</button>
+        </div>
+      </div>
+
+      <div class="sum">
+        <div><b id="sCountry">0</b><span>国家</span></div>
+        <div><b id="sCity">0</b><span>城市</span></div>
+        <div><b id="sPhotos">0</b><span>张照片</span></div>
+      </div>
+
+      <div class="clist" id="clist"></div>
+
+      <div class="tabbar">
+        <a class="tab" href="trips.html"><i></i>行程</a>
+        <a class="tab on" href="footprint.html"><i></i>地图</a>
+      </div>
+
+    </div>
+  </div>
+  <p class="hint">足迹地图 · 打开是中国，缩小是世界 · 删掉行程这里对应点亮也会熄灭</p>
+</div>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('wmap');
+  var W = 1000, H = 500;
+
+  /* 等距圆柱投影 */
+  function proj(lng, lat){
+    return [ (lng + 180) / 360 * W, (90 - lat) / 180 * H ];
+  }
+
+  /* 示意图轮廓（非真实国界，仅示意大陆位置） */
+  var LAND = [
+    [[-10,36],[10,44],[30,40],[40,36],[50,40],[60,44],[75,40],[90,30],[100,22],[110,20],
+     [120,24],[125,35],[135,42],[145,50],[165,60],[180,68],[180,75],[120,78],[80,76],
+     [50,70],[30,70],[15,62],[0,58],[-10,48]],
+    [[-17,35],[10,37],[32,32],[43,12],[51,12],[42,-5],[40,-20],[32,-33],[20,-35],[12,-18],
+     [8,-2],[0,5],[-10,10],[-17,20]],
+    [[-168,68],[-140,70],[-100,72],[-70,60],[-55,48],[-60,30],[-80,25],[-95,18],[-105,22],
+     [-120,30],[-130,50],[-150,60]],
+    [[-80,10],[-60,10],[-45,-5],[-38,-20],[-48,-35],[-58,-50],[-70,-52],[-75,-40],[-78,-20],[-80,-5]],
+    [[113,-11],[130,-12],[145,-15],[153,-28],[148,-38],[130,-33],[115,-34],[113,-22]],
+    [[-55,60],[-20,62],[-20,80],[-55,82]]
+  ];
+
+  function inPoly(px, py, poly){
+    var inside = false;
+    for(var i = 0, j = poly.length - 1; i < poly.length; j = i++){
+      var xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+      if(((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) inside = !inside;
+    }
+    return inside;
+  }
+
+  /* 多边形必须先用同一投影换算，否则是拿像素坐标和经纬度比 —— 必然对不上 */
+  var LAND_PX = LAND.map(function(poly){
+    return poly.map(function(pt){ return proj(pt[0], pt[1]); });
+  });
+
+  var gLand = document.createElementNS(NS, 'g');
+  svg.appendChild(gLand);
+
+  function buildLand(){
+    var frag = document.createDocumentFragment();
+    var step = 9;
+    for(var x = 0; x < W; x += step){
+      for(var y = 0; y < H; y += step){
+        for(var p = 0; p < LAND.length; p++){
+          if(inPoly(x, y, LAND_PX[p])){
+            var c = document.createElementNS(NS, 'circle');
+            c.setAttribute('cx', x);
+            c.setAttribute('cy', y);
+            c.setAttribute('r', '3.2');
+            c.setAttribute('class', 'land');
+            frag.appendChild(c);
+            break;
+          }
+        }
+      }
+    }
+    gLand.appendChild(frag);
+  }
+  buildLand();
+
+  /* 城市点 */
+  var trips = aliveTrips();
+  /* 自建行程没有 geo，必须过滤掉，否则下面 t.geo.city 会抛错，整页逻辑中断 */
+  var geoTrips = trips.filter(function(t){ return t.geo; });
+  var totalPhotos = 0;
+  var citySet = {}, countrySet = {};
+
+  var gCity = document.createElementNS(NS, 'g');
+  svg.appendChild(gCity);
+  var cityEls = [];   /* {halo, dot, lab, p} */
+
+  function photosOf(t){
+    return t.dates.reduce(function(a, d){ return a + d.n; }, 0) + importedOf(t.id);
+  }
+
+  geoTrips.forEach(function(t){
+    var p = proj(t.geo.lng, t.geo.lat);
+    var n = photosOf(t);
+    totalPhotos += n;
+    citySet[t.geo.city] = 1;
+    countrySet[t.geo.country] = 1;
+
+    var halo = document.createElementNS(NS, 'circle');
+    halo.setAttribute('cx', p[0]); halo.setAttribute('cy', p[1]);
+    halo.setAttribute('r', '9'); halo.setAttribute('class', 'halo');
+    gCity.appendChild(halo);
+
+    var dot = document.createElementNS(NS, 'circle');
+    dot.setAttribute('cx', p[0]); dot.setAttribute('cy', p[1]);
+    dot.setAttribute('r', '3.4'); dot.setAttribute('class', 'city');
+    dot.style.cursor = 'pointer';
+    dot.addEventListener('click', function(e){
+      if(drag.moved){ drag.moved = false; return; }
+      e.stopPropagation();
+      location.href = 'c1-prototype.html?trip=' + t.id;
+    });
+    gCity.appendChild(dot);
+
+    var lab = document.createElementNS(NS, 'text');
+    lab.setAttribute('class', 'clabel');
+    lab.textContent = t.geo.city;
+    gCity.appendChild(lab);
+
+    cityEls.push({halo: halo, dot: dot, lab: lab, p: p});
+  });
+
+  var nCity = Object.keys(citySet).length;
+  var nCountry = Object.keys(countrySet).length;
+  document.getElementById('sCountry').textContent = nCountry;
+  document.getElementById('sCity').textContent = nCity;
+  document.getElementById('sPhotos').textContent = totalPhotos.toLocaleString();
+  document.getElementById('sumline').textContent =
+    nCountry + ' 个国家 · ' + nCity + ' 个城市 · ' + totalPhotos.toLocaleString() + ' 张';
+
+  /* 城市列表 */
+  var cl = document.getElementById('clist');
+  if(!geoTrips.length){
+    cl.innerHTML = '<div class="empty2">还没有点亮的城市<br>去行程里导入素材，这里会自动亮起来</div>';
+  } else {
+    cl.innerHTML = geoTrips.map(function(t){
+      return '<a class="crow" href="c1-prototype.html?trip=' + t.id + '">' +
+             '<span class="dot"></span>' +
+             '<div class="tx"><b>' + t.geo.city + ' · ' + t.geo.province + '</b>' +
+             '<span>' + tripName(t) + ' · ' + tripRange(t) + '</span></div>' +
+             '<span class="n">' + photosOf(t).toLocaleString() + ' 张 ›</span></a>';
+    }).join('');
+  }
+
+  /* 两级缩放 */
+  var VIEW = {
+    world: [0, 0, 1000, 500],
+    china: [744, 117, 128, 83]
+  };
+  var curView = VIEW.china.slice();
+  var animTimer = null;
+
+  /* 城市点/文字保持屏幕尺寸恒定，只让底图缩放 */
+  function syncCity(){
+    var vw = svg.clientWidth || 360;
+    var u = curView[2] / vw;          /* 每个屏幕像素对应多少用户单位 */
+    /* 固定网格的底图只适合世界视图，放大后必须淡出，否则会变成一堆大圆点 */
+    var fade = (curView[2] - 150) / 520;
+    fade = Math.max(0, Math.min(1, fade));
+    gLand.style.opacity = fade.toFixed(2);
+
+    /* 缩到世界视图时标签会挤成一团，只保留亮点 */
+    var labelAlpha = curView[2] < 420 ? 1 : 0;
+
+    for(var i = 0; i < cityEls.length; i++){
+      var c = cityEls[i];
+      c.lab.style.opacity = labelAlpha;
+      c.halo.setAttribute('r', (7 * u).toFixed(2));
+      c.dot.setAttribute('r', (2.4 * u).toFixed(2));
+      c.lab.setAttribute('x', c.p[0] + 5 * u);
+      c.lab.setAttribute('y', c.p[1] + 3 * u);
+      c.lab.setAttribute('font-size', (8.5 * u).toFixed(2));
+      c.lab.setAttribute('stroke-width', (2.4 * u).toFixed(2));
+    }
+  }
+
+  function setView(target, animate){
+    if(animTimer){ clearTimeout(animTimer); animTimer = null; }
+    var from = curView.slice(), t0 = Date.now(), dur = 520;
+    function step(){
+      var k = Math.min(1, (Date.now() - t0) / dur);
+      var e = 1 - Math.pow(1 - k, 3);
+      curView = from.map(function(v, i){ return v + (target[i] - v) * e; });
+      svg.setAttribute('viewBox', curView.map(function(v){ return v.toFixed(1); }).join(' '));
+      syncCity();
+      if(k < 1) animTimer = setTimeout(step, 16);
+      else animTimer = null;
+    }
+    if(!animate){
+      curView = target.slice();
+      svg.setAttribute('viewBox', target.join(' '));
+      syncCity();
+      return;
+    }
+    step();
+  }
+
+  var btns = document.querySelectorAll('.mapctl button');
+  for(var i = 0; i < btns.length; i++){
+    btns[i].addEventListener('click', function(){
+      for(var j = 0; j < btns.length; j++) btns[j].classList.remove('on');
+      this.classList.add('on');
+      setView(VIEW[this.dataset.z], true);
+    });
+  }
+
+  /* ---------- 拖动平移 + 点击城市点 ---------- */
+  var drag = {on: false, moved: false, x: 0, y: 0, view: null};
+
+  svg.addEventListener('pointerdown', function(e){
+    drag.on = true; drag.moved = false;
+    drag.x = e.clientX; drag.y = e.clientY;
+    drag.view = curView.slice();
+    if(svg.setPointerCapture) svg.setPointerCapture(e.pointerId);
+  });
+
+  svg.addEventListener('pointermove', function(e){
+    if(!drag.on) return;
+    var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if(!drag.moved && Math.abs(dx) + Math.abs(dy) > 5) drag.moved = true;
+    if(!drag.moved) return;
+    var u = drag.view[2] / (svg.clientWidth || 360);
+    curView[0] = drag.view[0] - dx * u;
+    curView[1] = drag.view[1] - dy * u;
+    svg.setAttribute('viewBox', curView.map(function(v){ return v.toFixed(1); }).join(' '));
+    syncCity();
+  });
+
+  function endDrag(){ drag.on = false; }
+  svg.addEventListener('pointerup', endDrag);
+  svg.addEventListener('pointercancel', endDrag);
+  svg.addEventListener('pointerleave', endDrag);
+
+  setView(VIEW.china, false);
+})();
+</script>
+<script src="nav.js"></script>
+<script src="statusbar.js"></script>
+</body>
+</html>

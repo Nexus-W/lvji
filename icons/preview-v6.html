@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>图标 V6 · 散落照片 × 真实世界地图</title>
+<style>
+  :root{--bg:#05080B;--panel:#0E141B;--line:#212A36;--t1:#E9EEF6;--t2:#9AA6B6;--t3:#65707F;--accent:#3DDC97}
+  *{box-sizing:border-box}
+  body{margin:0;padding:36px 30px 44px;background:var(--bg);color:var(--t1);
+    font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+  h1{font-size:20px;font-weight:600;margin:0 0 4px;letter-spacing:-.2px}
+  .sub{font-size:12px;color:var(--t3);margin-bottom:26px}
+  .hero{display:flex;align-items:center;gap:34px;margin-bottom:26px}
+  .hero img{width:220px;height:220px;border-radius:48px;display:block;
+    box-shadow:0 26px 66px -22px rgba(0,0,0,.95),0 0 0 1px rgba(255,255,255,.06)}
+  .spec{font-size:12px;line-height:2.1;color:var(--t2)}
+  .spec b{display:block;font-size:15px;color:var(--t1);margin-bottom:8px;font-weight:600}
+  .spec i{color:var(--accent);font-style:normal;font-size:11px}
+  h2{font-size:11px;font-weight:500;color:var(--t3);margin:0 0 12px;letter-spacing:.08em}
+  .row{display:flex;align-items:flex-end;gap:30px;padding:20px 22px;border-radius:14px;
+    background:var(--panel);border:1px solid var(--line);margin-bottom:22px}
+  .cell{text-align:center}
+  .cell img{display:block;border-radius:22%;margin:0 auto 8px}
+  .cell span{font-size:10px;color:var(--t3)}
+  .note{font-size:11px;line-height:2;color:var(--t3);padding-top:18px;border-top:1px solid var(--line)}
+  .note b{color:var(--t2);font-weight:500}
+</style>
+</head>
+<body>
+
+<h1>V6 · 散落照片 × 真实世界地图</h1>
+<div class="sub">四张照片随手散在桌上，真实海岸线的点阵世界地图打底</div>
+
+<div class="hero">
+  <img src="icon-v6-512.png" alt="图标">
+  <div class="spec">
+    <b>散落 · 真实地理</b>
+    地图 <i>真实海岸线（159 个国家的边界），10px 点阵，30% 不透明</i><br>
+    散落 <i>4 张，角度 24° / −29° / 12° / −10°，两张出界</i><br>
+    主图 <i>404×296，−7°，山脊 + 太阳 + 书签</i><br>
+    底图 <i>#06090D → #141D26</i><br>
+    源 <i>@svg-maps/world，坐标取整后 397KB</i>
+  </div>
+</div>
+
+<h2>尺寸检查</h2>
+<div class="row">
+  <div class="cell"><img src="icon-v6-180.png" width="180" height="180"><span>180 · 桌面</span></div>
+  <div class="cell"><img src="icon-v6-120.png" width="120" height="120"><span>120</span></div>
+  <div class="cell"><img src="icon-v6-60.png" width="60" height="60"><span>60 · 设置页</span></div>
+</div>
+
+<div class="note">
+  <b>地图换成真的了</b>：上一版是我手画的粗略轮廓，只有 16 个拐点，看着像色块。
+  这版用了公开的真实国界数据（159 个国家/地区），海岸线是准的。<br>
+  <b>为什么散落</b>：四张卡片角度差 50° 以上、两张直接出画布，才像「随手放在桌上」；
+  四角对称摆放会像摆盘。<br>
+  <b>背后的照片也有内容</b>：每张背景卡片里都有一道低对比度的山影和地平线，
+  不是纯色块 —— 这样才像「一叠照片」而不是「几个框」。
+</div>
+
+</body>
+</html>

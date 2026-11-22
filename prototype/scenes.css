@@ -1,0 +1,16 @@
+/* 照片场景色卡与底图：地图页 / 全部照片页共用，改配色只改这里 */
+  .scene{overflow:hidden;background:linear-gradient(180deg,var(--a),var(--b) 56%,var(--c))}
+  .scene .sun{position:absolute;width:26%;height:26%;border-radius:50%;background:var(--sun);
+    left:var(--sx,22%);top:var(--sy,20%);opacity:.92;box-shadow:0 0 16px var(--sun)}
+  .scene .hill{position:absolute;left:-8%;right:-8%;bottom:0;height:54%;background:var(--c);
+    clip-path:var(--clip);opacity:.96}
+  .scene .hill2{position:absolute;left:-8%;right:-8%;bottom:0;height:34%;
+    background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.55))}
+  .sc1{--a:#1C4C5C;--b:#3E7B72;--c:#0E2026;--sun:#FFCF8E;--clip:polygon(0 100%,0 62%,18% 42%,36% 60%,54% 28%,72% 54%,88% 38%,100% 60%,100% 100%)}
+  .sc2{--a:#2A4E63;--b:#5E8E8A;--c:#13242B;--sun:#E8F4E3;--clip:polygon(0 100%,0 70%,22% 52%,44% 68%,62% 40%,82% 60%,100% 48%,100% 100%)}
+  .sc3{--a:#1B2A46;--b:#38507A;--c:#0C1220;--sun:#C9D8FF;--clip:polygon(0 100%,0 58%,24% 38%,48% 56%,70% 34%,100% 58%,100% 100%)}
+  .sc4{--a:#1E3B30;--b:#3C6B4E;--c:#0D1B16;--sun:#D8E8B8;--clip:polygon(0 100%,0 68%,16% 48%,34% 66%,52% 36%,76% 62%,100% 46%,100% 100%)}
+  .sc5{--a:#4A3A28;--b:#7A5E3C;--c:#1C1510;--sun:#FFE2A8;--clip:polygon(0 100%,0 72%,26% 56%,50% 70%,74% 44%,100% 64%,100% 100%)}
+  .sc6{--a:#2C3F52;--b:#6E8AA0;--c:#121A22;--sun:#FFFFFF;--clip:polygon(0 100%,0 54%,20% 34%,44% 52%,66% 30%,100% 50%,100% 100%)}
+  .sc7{--a:#101B2A;--b:#1E3244;--c:#06090E;--sun:#FFEFC2;--clip:polygon(0 100%,0 66%,22% 50%,46% 62%,68% 42%,100% 60%,100% 100%)}
+  .sc8{--a:#33505E;--b:#7C9AA0;--c:#16232A;--sun:#FFF3D0;--clip:polygon(0 100%,0 60%,18% 44%,40% 58%,58% 32%,80% 54%,100% 42%,100% 100%)}

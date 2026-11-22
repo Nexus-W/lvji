@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>图标 A 新版 · 世界地图航线</title>
+<style>
+  :root{
+    --bg:#05080B; --panel:#0E141B; --line:#212A36;
+    --t1:#E9EEF6; --t2:#9AA6B6; --t3:#65707F; --accent:#3DDC97;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:36px 30px 44px;background:var(--bg);color:var(--t1);
+    font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+
+  h1{font-size:20px;font-weight:600;margin:0 0 4px;letter-spacing:-.2px}
+  .sub{font-size:12px;color:var(--t3);margin-bottom:26px}
+
+  .hero{display:flex;align-items:center;gap:34px;margin-bottom:28px}
+  .hero img{width:220px;height:220px;border-radius:48px;display:block;
+    box-shadow:0 26px 66px -22px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.06)}
+  .spec{font-size:12px;line-height:2.1;color:var(--t2)}
+  .spec b{display:block;font-size:15px;color:var(--t1);margin-bottom:8px;font-weight:600}
+  .spec i{color:var(--accent);font-style:normal;font-size:11px}
+
+  h2{font-size:11px;font-weight:500;color:var(--t3);margin:0 0 12px;letter-spacing:.08em}
+  .row{display:flex;align-items:flex-end;gap:30px;padding:20px 22px;border-radius:14px;
+    background:var(--panel);border:1px solid var(--line);margin-bottom:22px}
+  .cell{text-align:center}
+  .cell img{display:block;border-radius:22%;margin:0 auto 8px}
+  .cell span{font-size:10px;color:var(--t3)}
+
+  .note{font-size:11px;line-height:2;color:var(--t3);padding-top:18px;
+    border-top:1px solid var(--line)}
+  .note b{color:var(--t2);font-weight:500}
+</style>
+</head>
+<body>
+
+<h1>A · 世界地图航线</h1>
+<div class="sub">灰色世界地图作底，一条航线从中国出发，依次穿过五大洲</div>
+
+<div class="hero">
+  <img src="icon-v4-512.png" alt="图标">
+  <div class="spec">
+    <b>世界航线</b>
+    大陆 <i>#C6D2DC · 16% 填充 / 42% 描边</i><br>
+    航线 <i>#3DDC97 · 6px 细线 · 75% 不透明</i><br>
+    落脚点 <i>中国为起点（16），其余 11</i><br>
+    底图 <i>#080D12 → #161E27</i><br>
+    无文字、无水印，纯 SVG
+  </div>
+</div>
+
+<h2>尺寸检查</h2>
+<div class="row">
+  <div class="cell"><img src="icon-v4-180.png" width="180" height="180"><span>180 · 桌面</span></div>
+  <div class="cell"><img src="icon-v4-120.png" width="120" height="120"><span>120</span></div>
+  <div class="cell"><img src="icon-v4-60.png" width="60" height="60"><span>60 · 设置页</span></div>
+</div>
+
+<div class="note">
+  <b>航线顺序</b>：中国 → 欧洲 → 非洲 → 北美 → 南美，一路向西。
+  这个顺序是为了让线条不互相交叉 —— 先直走欧洲，再南下非洲，然后跨大西洋。<br>
+  <b>大陆轮廓</b>：按经纬度取点、等距投影定位，再用 Catmull-Rom 转贝塞尔做平滑，
+  所以既有真实的地理比例，边线又是圆润的。<br>
+  <b>极简取舍</b>：没画海岸线细节、没画经纬网；澳洲保留，因为它是「这是世界地图」的识别锚点。
+</div>
+
+</body>
+</html>

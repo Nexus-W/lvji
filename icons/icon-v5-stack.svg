@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="46%" r="74%">
+      <stop offset="0%" stop-color="#151E27"/>
+      <stop offset="100%" stop-color="#070C11"/>
+    </radialGradient>
+
+    <!-- 点阵：密到能看出大陆的“面” -->
+    <pattern id="mesh" width="11" height="11" patternUnits="userSpaceOnUse">
+      <circle cx="5.5" cy="5.5" r="1.9" fill="#86D6C9"/>
+    </pattern>
+
+    <clipPath id="landclip">
+      <path d="M62.1 224.3 L110.3 252.9 L163.9 281.4 L177.3 367.1 L204.1 424.3 L230.8 481.4 L252.3 447.1 L295.1 447.1 L300.5 407.1 L324.6 355.7 L364.7 321.4 L356.7 281.4 L329.9 241.4 L297.8 195.7 L244.2 178.6 L137.1 195.7 Z"/>
+      <path d="M297.8 550.0 L351.3 538.6 L378.1 595.7 L418.3 624.3 L410.2 710.0 L383.5 784.3 L356.7 824.3 L324.6 892.9 L311.2 852.9 L303.1 767.1 L297.8 664.3 L297.8 572.9 Z"/>
+      <path d="M485.2 390.0 L512.0 344.3 L538.8 281.4 L565.6 195.7 L592.3 195.7 L619.1 252.9 L592.3 338.6 L565.6 378.6 Z"/>
+      <path d="M466.5 481.4 L512.0 412.9 L538.8 390.0 L597.7 412.9 L627.1 527.1 L648.6 527.1 L624.5 624.3 L619.1 710.0 L597.7 784.3 L565.6 795.7 L544.1 698.6 L533.4 595.7 L485.2 538.6 Z"/>
+      <path d="M592.3 195.7 L672.7 167.1 L779.8 161.4 L886.9 184.3 L967.2 207.1 L988.6 252.9 L967.2 355.7 L913.7 367.1 L886.9 395.7 L833.3 470.0 L801.2 538.6 L779.8 481.4 L726.2 538.6 L686.1 452.9 L659.3 367.1 L619.1 338.6 L592.3 338.6 Z"/>
+      <path d="M814.6 658.6 L860.1 664.3 L900.3 681.4 L921.7 755.7 L908.3 812.9 L860.1 784.3 L819.9 790.0 Z"/>
+    </clipPath>
+
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1C4A5C"/>
+      <stop offset="100%" stop-color="#0B1A24"/>
+    </linearGradient>
+    <clipPath id="cardclip"><rect x="260" y="344" width="420" height="312" rx="26"/></clipPath>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+
+  <!-- 点阵世界地图 -->
+  <rect width="1024" height="1024" fill="url(#mesh)" clip-path="url(#landclip)" opacity="0.30"/>
+
+  <!-- 照片叠放 -->
+  <g transform="rotate(-17 470 500)">
+    <rect x="222" y="376" width="420" height="312" rx="26" fill="#091119" stroke="#1A2935" stroke-width="5"/>
+  </g>
+  <g transform="rotate(-12 470 500)">
+    <rect x="237" y="362" width="420" height="312" rx="26" fill="#0B1520" stroke="#213544" stroke-width="5"/>
+  </g>
+  <g transform="rotate(-7 470 500)">
+    <rect x="249" y="353" width="420" height="312" rx="26" fill="#0E1B26" stroke="#2A4152" stroke-width="5"/>
+  </g>
+  <g transform="rotate(-4 470 500)">
+    <rect x="260" y="344" width="420" height="312" rx="26" fill="url(#sky)" stroke="#4A6E82" stroke-width="5"/>
+    <g clip-path="url(#cardclip)">
+      <circle cx="338" cy="422" r="26" fill="#3DDC97" fill-opacity="0.9"/>
+      <path d="M280 616 L364 506 L426 570 L492 488 L590 616"
+            fill="none" stroke="#3DDC97" stroke-width="15"
+            stroke-linecap="round" stroke-linejoin="round" opacity="0.88"/>
+    </g>
+    <path d="M592 344 L652 344 L652 430 L622 404 L592 430 Z" fill="#3DDC97"/>
+  </g>
+</svg>

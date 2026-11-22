@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>导入轨迹</title>
+<link rel="stylesheet" href="proto.css">
+<script src="theme.js"></script>
+<style>
+  .file{display:flex;align-items:center;gap:8px;margin:16px 16px 0;padding:12px;border-radius:12px;
+    background:var(--panel2);border:1px dashed #2E3A4A}
+  .file .ext{width:34px;height:34px;border-radius:9px;background:rgba(61,220,151,.12);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex:0 0 34px}
+  .file .n{flex:1;min-width:0}
+  .file .n b{display:block;font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .file .n span{display:block;font-size:9px;color:var(--t3);margin-top:4px}
+  .file .sw2{font-size:9px;color:var(--t3)}
+  .box{margin:12px 16px 0;border-radius:12px;background:var(--panel2);border:1px solid var(--line);padding:12px}
+  .box .hd{display:flex;align-items:center;margin-bottom:8px}
+  .box .hd b{font-size:12px;font-weight:600}
+  .box .hd .ok{margin-left:auto;font-size:9px;padding:2px 8px;border-radius:5px;
+    background:rgba(61,220,151,.14);color:var(--accent);font-weight:700}
+  .kv{display:grid;grid-template-columns:1fr 1fr;gap:8px 8px}
+  .kv div span{display:block;font-size:9px;color:var(--t3)}
+  .kv div b{display:block;font-size:12px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+  .tip{margin:8px 16px 0;padding:12px 12px;border-radius:12px;font-size:12px;line-height:1.75}
+  .tip b{display:block;font-size:12px;margin-bottom:4px}
+  .tip.g{background:rgba(61,220,151,.07);border:1px solid rgba(61,220,151,.3);color:rgba(207,247,228,.72)}
+  .tip.g b{color:#CFF7E4}
+  .tip.b{background:rgba(108,140,255,.07);border:1px solid rgba(108,140,255,.28);color:rgba(198,208,255,.72)}
+  .tip.b b{color:#C6D0FF}
+  .why{margin:12px 16px 0;border-radius:12px;background:var(--panel2);border:1px solid var(--line);padding:12px}
+  .why .t{font-size:12px;color:var(--t3);margin-bottom:8px}
+  .why .i{display:flex;gap:8px;margin-bottom:8px;font-size:9px;color:var(--t2);line-height:1.6}
+  .why .i i{width:5px;height:5px;border-radius:50%;background:var(--accent);flex:0 0 5px;margin-top:4px}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="device">
+    <div class="app">
+
+      <div class="head">
+        <a class="back" href="trips.html" data-back="trips.html">‹</a>
+        <div class="ht"><b>导入轨迹</b><span>支持 GPX / KML / KMZ</span></div>
+        <div class="hbtn">?</div>
+      </div>
+
+      <div class="scroll">
+
+        <div class="file">
+          <div class="ext">GPX</div>
+          <div class="n"><b>20250503-凤凰径第一段.gpx</b><span>1.06 MB · 来自两步路导出</span></div>
+          <span class="sw2">换</span>
+        </div>
+
+        <div class="box">
+          <div class="hd"><b>凤凰径第一段</b><span class="ok">解析成功</span></div>
+          <div class="kv">
+            <div><span>里程</span><b>14.2 km</b></div>
+            <div><span>累计爬升</span><b>860 m</b></div>
+            <div><span>记录时间</span><b>05:12 - 14:38</b></div>
+            <div><span>标注点</span><b>8 个</b></div>
+          </div>
+        </div>
+
+        <div class="tip g">
+          <b>时间与某次行程高度重叠</b>
+          与「云南 · 大理丽江」重叠 92%，可并入该行程
+        </div>
+
+        <div class="tip b">
+          <b>坐标系已自动校正</b>
+          文件为 WGS-84，已转换为 GCJ-02 用于地图显示，未转换会产生 300-500 米偏移
+        </div>
+
+        <div class="why">
+          <div class="t">导入后可以做什么</div>
+          <div class="i"><i></i><span>在地图上画出这次走过的路线</span></div>
+          <div class="i"><i></i><span>用轨迹时间给没有 GPS 的照片推算坐标</span></div>
+          <div class="i"><i></i><span>把 8 个标注点写成照片备注</span></div>
+        </div>
+
+        <div class="btnrow" style="margin-top:4px">
+          <a class="btn ghost" href="c1-prototype.html">只存轨迹</a>
+          <a class="btn" href="c1-prototype.html">导入并合并</a>
+        </div>
+
+        <div style="text-align:center;font-size:9px;color:var(--t3);line-height:1.8;padding:0 24px 20px">
+          两步路导出路径：我的 → 轨迹 → 详情 → 右上角「更多」→ 导出轨迹文件
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+  <p class="hint">P11 轨迹导入 · 关键提示是坐标系校正和「能补多少张照片」</p>
+</div>
+<script src="nav.js"></script>
+<script src="statusbar.js"></script>
+</body>
+</html>

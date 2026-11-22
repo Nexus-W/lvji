@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>分享精选</title>
+<link rel="stylesheet" href="proto.css">
+<link rel="stylesheet" href="scenes.css">
+<script src="theme.js"></script>
+<style>
+  .head{display:flex;align-items:center;padding:0 16px;height:54px;flex:0 0 54px;
+    border-bottom:1px solid var(--line)}
+  .ht{flex:1;min-width:0}
+  .ht b{display:block;font-size:15px;font-weight:600;letter-spacing:-.2px;
+    line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ht span{display:block;font-size:9px;color:var(--t3);margin-top:4px;line-height:1.3;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hbtn{width:30px;height:30px;border-radius:9px;border:1px solid var(--line);
+    background:transparent;color:var(--t2);font-size:15px;line-height:1;
+    display:flex;align-items:center;justify-content:center;text-decoration:none}
+
+  .body{flex:1;overflow-y:auto;scrollbar-width:none;padding:16px 16px 8px;
+    display:flex;flex-direction:column}
+  .body::-webkit-scrollbar{display:none}
+
+  /* 分享画布 1:1 */
+  .canvas{position:relative;width:100%;aspect-ratio:1/1;border-radius:14px;overflow:hidden;
+    background:#0B1218;box-shadow:0 16px 40px -18px rgba(0,0,0,.9);flex:0 0 auto}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+    width:100%;height:100%;gap:2px;background:#0B1218}
+  .cell{position:relative;overflow:hidden}
+  .cell::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.06)}
+  .cell.empty{background:#0E1720;display:flex;align-items:center;justify-content:center;
+    cursor:pointer}
+  .cell.empty::after{display:none}
+  .cell.empty b{font-size:20px;color:#3A4A58;font-weight:300}
+  .cell.empty i{position:absolute;inset:7px;border:1px dashed #26333F;border-radius:6px;
+    font-style:normal}
+
+  /* 底部信息条 */
+  .cap{position:absolute;left:0;right:0;bottom:0;padding:44px 14px 14px;
+    background:linear-gradient(to top,rgba(4,8,12,.94),rgba(4,8,12,.55) 55%,rgba(4,8,12,0));
+    display:flex;align-items:flex-end;transition:.2s}
+  .cap.hide{opacity:0;pointer-events:none}
+  .cap .tx{flex:1;min-width:0}
+  .cap .tx b{display:block;font-size:11.5px;font-weight:600;color:#fff;
+    text-shadow:0 1px 3px rgba(0,0,0,.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cap .tx span{display:block;font-size:8.5px;color:rgba(255,255,255,.72);margin-top:2px;
+    text-shadow:0 1px 3px rgba(0,0,0,.6)}
+  .cap .mk{font-size:8px;color:rgba(255,255,255,.55);letter-spacing:.08em;flex:0 0 auto;
+    padding-left:8px}
+
+  .canvas.light{background:#F2F1ED}
+  .canvas.light .grid{background:#F2F1ED}
+  .canvas.light .cap{background:linear-gradient(to top,rgba(255,255,255,.97),
+    rgba(255,255,255,.62) 55%,rgba(255,255,255,0))}
+  .canvas.light .cap .tx b{color:#1A1A1C;text-shadow:none}
+  .canvas.light .cap .tx span{color:#6E6E73;text-shadow:none}
+  .canvas.light .cap .mk{color:#B0B0B5}
+
+  /* 选片入口行 */
+  .pickrow{display:flex;align-items:center;justify-content:space-between;
+    padding:12px 0 2px;gap:10px}
+  .pickrow .cnt{font-size:11px;color:var(--t3)}
+  .pickrow .cnt b{color:var(--accent);font-weight:600}
+  .pickrow button{height:30px;padding:0 14px;border-radius:8px;font-family:inherit;
+    font-size:11px;cursor:pointer;background:rgba(61,220,151,.1);color:var(--accent);
+    border:1px solid rgba(61,220,151,.4);flex:0 0 auto}
+
+  /* 控件行 */
+  .ctrls{display:flex;align-items:center;justify-content:space-between;
+    gap:10px;padding:10px 0 4px;width:100%}
+  .seg{display:flex;gap:6px;flex:0 0 auto}
+  .seg button{height:30px;padding:0 12px;border-radius:8px;font-family:inherit;font-size:11px;
+    cursor:pointer;background:var(--panel2);border:1px solid transparent;color:var(--t3)}
+  .seg button.on{color:var(--accent);border-color:rgba(61,220,151,.45);
+    background:rgba(61,220,151,.08)}
+  .chip{height:30px;padding:0 12px;border-radius:8px;font-family:inherit;font-size:11px;
+    cursor:pointer;background:var(--panel2);border:1px solid transparent;color:var(--t3);
+    flex:0 0 auto;white-space:nowrap}
+  .chip.on{color:var(--accent);border-color:rgba(61,220,151,.45);
+    background:rgba(61,220,151,.08)}
+  .chip.on::before{content:"✓ ";opacity:.85}
+
+  .foot{flex:0 0 auto;padding:10px 16px 14px;border-top:1px solid var(--line);
+    background:var(--panel)}
+  .foot .btn{width:100%;height:42px}
+
+  /* 选片面板 */
+  .pk{position:absolute;inset:0;z-index:100;display:none;flex-direction:column;
+    background:rgba(6,10,14,.985)}
+  .pk.show{display:flex}
+  .pk-head{display:flex;align-items:center;gap:10px;padding:16px 16px 10px;flex:0 0 auto}
+  .pk-head b{flex:1;font-size:14px;font-weight:600}
+  .pk-head .n{font-size:11px;color:var(--t3)}
+  .pk-head .n b{color:var(--accent);font-size:11px;font-weight:600}
+  .pk-trips{display:flex;gap:8px;overflow-x:auto;padding:0 16px 12px;flex:0 0 auto;
+    scrollbar-width:none}
+  .pk-trips::-webkit-scrollbar{display:none}
+  .pk-trips button{flex:0 0 auto;height:28px;padding:0 11px;border-radius:14px;
+    font-family:inherit;font-size:11px;cursor:pointer;background:var(--panel2);
+    border:1px solid var(--line);color:var(--t3);white-space:nowrap}
+  .pk-trips button.on{color:var(--accent);border-color:rgba(61,220,151,.45);
+    background:rgba(61,220,151,.08)}
+
+  .pk-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);
+    gap:4px;padding:0 16px 12px;align-content:start;scrollbar-width:none}
+  .pk-grid::-webkit-scrollbar{display:none}
+  .pk-cell{position:relative;height:0;padding-bottom:100%;border-radius:6px;
+    overflow:hidden;cursor:pointer}
+  .pk-cell .no{position:absolute;right:4px;top:4px;min-width:17px;height:17px;
+    border-radius:9px;background:var(--accent);color:#04170F;font-size:10px;
+    font-weight:700;display:flex;align-items:center;justify-content:center;
+    padding:0 4px;z-index:2}
+  .pk-cell .mask{position:absolute;inset:0;background:rgba(4,8,12,.55);
+    border:2px solid var(--accent);border-radius:6px;display:none;z-index:1}
+  .pk-cell.on .mask{display:block}
+
+  .pk-foot{flex:0 0 auto;display:flex;gap:9px;padding:10px 16px 14px;
+    border-top:1px solid var(--line)}
+  .pk-foot button{flex:1;height:40px;border-radius:10px;font-family:inherit;font-size:12px;
+    cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--t2)}
+  .pk-foot .ok{background:var(--accent);border-color:var(--accent);color:#04170F;
+    font-weight:600}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="device">
+    <div class="app">
+
+      <div class="head">
+        <div class="ht"><b>分享精选</b><span>挑九张，拼成一张</span></div>
+        <a class="hbtn" href="timeline-page.html" data-back="timeline-page.html">×</a>
+      </div>
+
+      <div class="body">
+        <div class="canvas" id="canvas">
+          <div class="grid" id="grid"></div>
+          <div class="cap" id="cap">
+            <div class="tx">
+              <b id="tName">云南 · 大理丽江</b>
+              <span id="tMeta">2026.10.02 - 10.06 · 5 天</span>
+            </div>
+            <span class="mk">旅迹</span>
+          </div>
+        </div>
+
+        <div class="pickrow">
+          <span class="cnt">已选 <b id="cnt">0</b> / 9 张</span>
+          <button id="pickBtn">选照片</button>
+        </div>
+
+        <div class="ctrls">
+          <div class="seg">
+            <button class="on" data-s="dark">深色</button>
+            <button data-s="light">浅色</button>
+          </div>
+          <button class="chip on" id="infoSw">显示信息</button>
+        </div>
+      </div>
+
+      <div class="foot">
+        <button class="btn" id="save">保存到相册</button>
+      </div>
+
+      <!-- 选片面板 -->
+      <div class="pk" id="pk">
+        <div class="pk-head">
+          <b>选择照片</b>
+          <span class="n">已选 <b id="pkCnt">0</b> / 9</span>
+        </div>
+        <div class="pk-trips" id="pkTrips"></div>
+        <div class="pk-grid" id="pkGrid"></div>
+        <div class="pk-foot">
+          <button id="pkClear">清空</button>
+          <button class="ok" id="pkDone">完成</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <p class="hint">分享图 · 3×3 九宫格 · 保存后是一张 1080×1080 的方图</p>
+</div>
+
+<script src="data.js"></script>
+<script src="lightbox.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var TRIP = getTrip(q('trip'));
+  var ALL = aliveTrips();
+  if(ALL.length && !ALL.some(function(t){ return t.id === TRIP.id; })){
+    ALL.unshift(TRIP);
+  }
+
+  document.getElementById('tName').textContent = tripName(TRIP);
+  document.getElementById('tMeta').textContent =
+    tripRange(TRIP) + ' · ' + tripDays(TRIP) + ' 天';
+
+  /* ---------- 选片状态 ---------- */
+  var picked = [];
+  var pkTrip = TRIP.id;
+
+  function keyOf(tid, id){ return tid + '::' + id; }
+  function isPicked(tid, id){
+    return picked.some(function(x){ return keyOf(x.trip, x.id) === keyOf(tid, id); });
+  }
+  function photosOf(t){
+    try { return makePhotos(t) || []; } catch(e){ return []; }
+  }
+
+  /* 默认：本行程的精选 → 本行程前九张 */
+  function seed(){
+    var feat = featuredOf(TRIP.id) || [];
+    var pool = photosOf(TRIP);
+    var byId = {};
+    pool.forEach(function(p){ byId[p.id] = p; });
+
+    feat.forEach(function(f){
+      if(picked.length >= 9) return;
+      var p = byId[f.id];
+      if(p) picked.push({trip: TRIP.id, id: p.id, sc: f.sc || p.sc});
+    });
+    if(picked.length < 9){
+      pool.forEach(function(p){
+        if(picked.length >= 9) return;
+        if(!isPicked(TRIP.id, p.id)) picked.push({trip: TRIP.id, id: p.id, sc: p.sc});
+      });
+    }
+  }
+
+  /* ---------- 画布 ---------- */
+  var grid = document.getElementById('grid');
+
+  function render(){
+    var cells = '';
+    for(var i = 0; i < 9; i++){
+      var x = picked[i];
+      if(x) cells += '<div class="cell scene ph ' + x.sc + '"></div>';
+      else cells += '<div class="cell empty"><i></i><b>+</b></div>';
+    }
+    grid.innerHTML = cells;
+    document.getElementById('cnt').textContent = picked.length;
+    document.getElementById('pkCnt').textContent = picked.length;
+    document.getElementById('save').textContent =
+      picked.length ? '保存到相册' : '先选几张';
+  }
+
+  grid.addEventListener('click', function(e){
+    if(e.target.closest('.cell.empty')) openPicker();
+  });
+
+  /* ---------- 选片面板 ---------- */
+  var pk = document.getElementById('pk');
+  var pkGrid = document.getElementById('pkGrid');
+  var pkTrips = document.getElementById('pkTrips');
+
+  function renderTrips(){
+    pkTrips.innerHTML = ALL.map(function(t){
+      var cls = (t.id === pkTrip) ? ' class="on"' : '';
+      var name = (t.id === TRIP.id) ? '本次 · ' + tripName(t) : tripName(t);
+      return '<button data-t="' + t.id + '"' + cls + '>' + name + '</button>';
+    }).join('');
+  }
+
+  function renderPool(){
+    var t = getTrip(pkTrip);
+    var pool = photosOf(t);
+    if(!pool.length){
+      pkGrid.innerHTML = '<div style="grid-column:1/-1;padding:34px 0;text-align:center;' +
+        'font-size:11px;color:var(--t3)">这个行程还没有照片</div>';
+      return;
+    }
+    pkGrid.innerHTML = pool.map(function(p){
+      var on = isPicked(pkTrip, p.id);
+      var idx = 0;
+      if(on){
+        for(var i = 0; i < picked.length; i++){
+          if(keyOf(picked[i].trip, picked[i].id) === keyOf(pkTrip, p.id)) idx = i + 1;
+        }
+      }
+      return '<div class="pk-cell scene ph ' + p.sc + (on ? ' on' : '') +
+             '" data-t="' + pkTrip + '" data-id="' + p.id + '" data-sc="' + p.sc + '">' +
+             (on ? '<span class="no">' + idx + '</span>' : '') +
+             '<span class="mask"></span></div>';
+    }).join('');
+  }
+
+  function openPicker(){
+    renderTrips();
+    renderPool();
+    pk.classList.add('show');
+  }
+
+  document.getElementById('pickBtn').addEventListener('click', openPicker);
+  document.getElementById('pkDone').addEventListener('click', function(){
+    pk.classList.remove('show');
+    render();
+  });
+  document.getElementById('pkClear').addEventListener('click', function(){
+    picked = [];
+    renderPool();
+    render();
+  });
+
+  pkTrips.addEventListener('click', function(e){
+    var b = e.target.closest('button[data-t]');
+    if(!b) return;
+    pkTrip = b.dataset.t;
+    renderTrips();
+    renderPool();
+  });
+
+  pkGrid.addEventListener('click', function(e){
+    var c = e.target.closest('.pk-cell');
+    if(!c) return;
+    var tid = c.dataset.t, id = c.dataset.id;
+
+    if(isPicked(tid, id)){
+      picked = picked.filter(function(x){ return keyOf(x.trip, x.id) !== keyOf(tid, id); });
+    } else {
+      if(picked.length >= 9){ Lightbox.toast('最多 9 张'); return; }
+      picked.push({trip: tid, id: id, sc: c.dataset.sc});
+    }
+    renderPool();
+    render();
+  });
+
+  /* ---------- 样式与信息条 ---------- */
+  var canvas = document.getElementById('canvas');
+  var segs = document.querySelectorAll('.seg button');
+  for(var k = 0; k < segs.length; k++){
+    segs[k].addEventListener('click', function(){
+      for(var j = 0; j < segs.length; j++) segs[j].classList.remove('on');
+      this.classList.add('on');
+      canvas.classList.toggle('light', this.dataset.s === 'light');
+    });
+  }
+
+  var sw = document.getElementById('infoSw');
+  var cap = document.getElementById('cap');
+  sw.addEventListener('click', function(){
+    var on = sw.classList.toggle('on');
+    cap.classList.toggle('hide', !on);
+  });
+
+  document.getElementById('save').addEventListener('click', function(){
+    if(!picked.length){ Lightbox.toast('先选几张'); return; }
+    Lightbox.toast('已保存到相册');
+  });
+
+  /* ---------- 启动 ---------- */
+  seed();
+  render();
+})();
+</script>
+<script src="nav.js"></script>
+<script src="statusbar.js"></script>
+</body>
+</html>

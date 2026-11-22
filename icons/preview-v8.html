@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>图标 V8 · 主图突出</title>
+<style>
+  :root{--bg:#05080B;--panel:#0E141B;--line:#212A36;--t1:#E9EEF6;--t2:#9AA6B6;--t3:#65707F;--accent:#3DDC97}
+  *{box-sizing:border-box}
+  body{margin:0;padding:36px 30px 44px;background:var(--bg);color:var(--t1);
+    font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+  h1{font-size:20px;font-weight:600;margin:0 0 4px;letter-spacing:-.2px}
+  .sub{font-size:12px;color:var(--t3);margin-bottom:26px}
+  .hero{display:flex;align-items:center;gap:34px;margin-bottom:26px}
+  .hero img{width:230px;height:230px;border-radius:50px;display:block;
+    box-shadow:0 30px 70px -24px rgba(0,0,0,.95),0 0 0 1px rgba(255,255,255,.06)}
+  .spec{font-size:12px;line-height:2.1;color:var(--t2)}
+  .spec b{display:block;font-size:15px;color:var(--t1);margin-bottom:8px;font-weight:600}
+  .spec i{color:var(--accent);font-style:normal;font-size:11px}
+  h2{font-size:11px;font-weight:500;color:var(--t3);margin:0 0 12px;letter-spacing:.08em}
+  .row{display:flex;align-items:flex-end;gap:30px;padding:20px 22px;border-radius:14px;
+    background:var(--panel);border:1px solid var(--line);margin-bottom:22px}
+  .cell{text-align:center}
+  .cell img{display:block;border-radius:22%;margin:0 auto 8px}
+  .cell span{font-size:10px;color:var(--t3)}
+  .note{font-size:11px;line-height:2;color:var(--t3);padding-top:18px;border-top:1px solid var(--line)}
+  .note b{color:var(--t2);font-weight:500}
+</style>
+</head>
+<body>
+
+<h1>V8 · 主图突出</h1>
+<div class="sub">主卡放大到 470×344 并提亮，两张背景压到 78% 退到后面，地图从四角露出</div>
+
+<div class="hero">
+  <img src="icon-v8-512.png" alt="图标">
+  <div class="spec">
+    <b>主次分明</b>
+    主卡 <i>470×344（+16%），−7°，描边 #5C8496，天空提亮</i><br>
+    背景 <i>292×214 / 272×200，整体 78% 不透明</i><br>
+    地图 <i>真实海岸线，10px 点阵，36% 不透明</i><br>
+    压角 <i>左上、右下各被主卡压住一角</i><br>
+    底图 <i>#06090D → #151F29</i>
+  </div>
+</div>
+
+<h2>尺寸检查</h2>
+<div class="row">
+  <div class="cell"><img src="icon-v8-180.png" width="180" height="180"><span>180 · 桌面</span></div>
+  <div class="cell"><img src="icon-v8-120.png" width="120" height="120"><span>120</span></div>
+  <div class="cell"><img src="icon-v8-60.png" width="60" height="60"><span>60 · 设置页</span></div>
+</div>
+
+<div class="note">
+  <b>怎么让主图「突出」又「不挡地图」</b>：主卡从 404×296 放大到 470×344（面积 +35%），
+  但四周仍留 277px 边距 —— 四角的世界地图完整露出来，主卡只占中间 46% 宽度。<br>
+  <b>背景怎么「融进背景」</b>：尺寸缩到原来八成、整体 78% 不透明、描边从 #2A4458 降到 #1B2C38，
+  填充也压暗一档 —— 现在它们像「压在抽屉里的旧照片」，不再和主图抢。<br>
+  <b>踩坑</b>：主卡一变大，山脊基线（y=718）就掉到卡片下沿（678）外面被圆角裁掉了。
+  改成按卡片高度算比例定位，以后改尺寸不会再被切。
+</div>
+
+</body>
+</html>

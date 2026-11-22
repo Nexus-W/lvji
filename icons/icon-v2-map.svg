@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <radialGradient id="b2" cx="48%" cy="42%" r="74%">
+      <stop offset="0%" stop-color="#151E28"/>
+      <stop offset="100%" stop-color="#080D12"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#b2)"/>
+
+  <!-- 折页地图：三块面板，折痕清楚，是全球通用的地图符号 -->
+  <g stroke="#41606F" stroke-width="7" stroke-linejoin="round">
+
+    <path d="M188 412 L392 366 L392 712 L188 758 Z" fill="#152430"/>
+
+    <path d="M392 366 L600 412 L600 758 L392 712 Z" fill="#1E303D"/>
+
+    <path d="M600 412 L812 366 L812 712 L600 758 Z" fill="#152430"/>
+  </g>
+
+  <!-- 面板内的两条等高线 -->
+  <g fill="none" stroke="#4E7C86" stroke-width="5" opacity="0.35" stroke-linecap="round">
+    <path d="M226 500 C 268 486, 300 508, 344 494"/>
+    <path d="M226 640 C 268 626, 300 648, 344 634"/>
+    <path d="M648 500 C 690 486, 722 508, 766 494"/>
+    <path d="M648 640 C 690 626, 722 648, 766 634"/>
+  </g>
+
+  <!-- 你要去的那一点 -->
+  <circle cx="496" cy="562" r="46" fill="#3DDC97"/>
+</svg>

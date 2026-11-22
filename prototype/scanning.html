@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>正在读取素材</title>
+<link rel="stylesheet" href="proto.css">
+<script src="theme.js"></script>
+<style>
+  .wrap{flex:1;display:flex;flex-direction:column;padding:8px 20px 0;overflow:hidden}
+  .ring{width:158px;height:158px;margin:14px auto 0;position:relative}
+  .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .ring .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .ring .num b{font-size:20px;font-weight:600;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+  .ring .num span{font-size:9px;color:var(--t3)}
+  .st{text-align:center;margin-top:16px}
+  .st b{font-size:15px;font-weight:600;display:block}
+  .st span{font-size:12px;color:var(--t3);display:block;margin-top:8px;line-height:1.7}
+  .devs{margin-top:16px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel2)}
+  .dev{display:flex;align-items:center;gap:8px;padding:12px 12px;border-bottom:1px solid rgba(35,44,57,.7);font-size:12px}
+  .dev:last-child{border-bottom:none}
+  .dev .d{width:6px;height:6px;border-radius:50%;flex:0 0 6px}
+  .dev .g{flex:1;min-width:0}
+  .dev .n{font-size:12px;color:var(--t3);font-variant-numeric:tabular-nums}
+  .log{margin-top:12px;padding:8px 12px;border-radius:10px;background:var(--panel2);border:1px solid var(--line)}
+  .log .t{font-size:9px;color:var(--t3);margin-bottom:8px}
+  .log .l{font-size:12px;color:var(--t2);line-height:1.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .log .l em{font-style:normal;color:var(--accent)}
+  .done{display:none}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="device">
+    <div class="app">
+
+      <div class="head">
+        <div class="ht"><b>导入素材</b><span id="sub">来自相册 · 导入后可整理</span></div>
+        <a class="hbtn" href="trips.html" data-back="trips.html">×</a>
+      </div>
+
+      <div class="wrap">
+        <div class="ring">
+          <svg viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="52" stroke="#1B2430" stroke-width="8" fill="none"/>
+            <circle id="arc" cx="60" cy="60" r="52" stroke="#3DDC97" stroke-width="8" fill="none"
+                    stroke-linecap="round" stroke-dasharray="327" stroke-dashoffset="327"/>
+          </svg>
+          <div class="num"><b id="pct">0%</b><span id="cnt">0 / 2,012</span></div>
+        </div>
+
+        <div class="st" id="st">
+          <b id="stTitle">正在读取素材</b>
+          <span id="stSub">扫描手机相册，读取拍摄时间、设备、坐标</span>
+        </div>
+
+        <div class="devs">
+          <div class="dev"><span class="d" style="background:var(--accent)"></span>
+            <div class="g">手机相册 · OPPO PGGM10</div><span class="n" id="n1">0</span></div>
+          <div class="dev"><span class="d" style="background:var(--info)"></span>
+            <div class="g">SD 卡 · Osmo Action 5 Pro</div><span class="n" id="n2">0 / 806</span></div>
+        </div>
+
+        <div class="log">
+          <div class="t">正在处理</div>
+          <div class="l" id="l1">—</div>
+          <div class="l" id="l2">—</div>
+        </div>
+
+        <div style="flex:1"></div>
+
+        <a class="btn ghost" id="fixBtn" href="remedy-page.html"
+           style="display:none;margin-bottom:8px">现在补位置</a>
+        <div class="btnrow" id="btns" style="padding-left:0;padding-right:0">
+          <a class="btn ghost" href="trips.html" data-back="trips.html">取消</a>
+          <a class="btn" href="trips.html" id="next">后台导入</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <p class="hint">P2 扫描导入 · 进度会自己跑完 · 完成后进入行程列表</p>
+</div>
+
+<script>
+(function(){
+  var TRIP = getTrip(q('trip'));
+  var N = parseInt(q('n') || '0', 10) || 24;
+  var TARGET = getTrip(q('trip')).name;
+  var pct = 0, total = N, t0 = Date.now(), dur = 4200;
+  var arc = document.getElementById('arc');
+  var pctEl = document.getElementById('pct');
+  var cntEl = document.getElementById('cnt');
+  var n1 = document.getElementById('n1'), n2 = document.getElementById('n2');
+  var l1 = document.getElementById('l1'), l2 = document.getElementById('l2');
+  var stTitle = document.getElementById('stTitle'), stSub = document.getElementById('stSub');
+  var next = document.getElementById('next');
+
+  var files1 = ['IMG_20261002_143201.jpg','IMG_20261002_143355.jpg','VID_20261002_144012.mp4','IMG_20261002_150830.jpg'];
+  var files2 = ['DJI_0284.MP4','DJI_0285.JPG','DJI_0286.JPG','DJI_0290.MP4'];
+
+  function step(){
+    var k = Math.min(1, (Date.now() - t0) / dur);
+    var e = 1 - Math.pow(1 - k, 2);
+    pct = Math.round(e * 100);
+    arc.setAttribute('stroke-dashoffset', 327 * (1 - e));
+    pctEl.textContent = pct + '%';
+    var done = Math.round(e * total);
+    cntEl.textContent = done.toLocaleString() + ' / ' + total.toLocaleString();
+    n1.textContent = Math.round(done * 0.92).toLocaleString();
+    n2.textContent = String(Math.round(done * 0.08));
+    l1.textContent = files1[Math.floor(Date.now() / 400) % 4];
+    l2.textContent = files2[Math.floor(Date.now() / 550) % 4];
+
+    if(k < 1){
+      setTimeout(step, 16);
+    } else {
+      finish();
+    }
+  }
+
+  function finish(){
+    pctEl.textContent = '100%';
+    stTitle.textContent = '导入完成';
+    addImported(TRIP.id, N);
+    var miss = Math.max(1, Math.round(N * 0.08));
+    stSub.innerHTML = '已导入 <b style="color:var(--accent)">' + N + ' 项</b>到「' + TARGET + '」<br>' +
+                      '其中 <b style="color:#D9C48A">' + miss + ' 张</b>没有位置信息';
+    var fixBtn = document.getElementById('fixBtn');
+    if(fixBtn){
+      fixBtn.style.display = '';
+      fixBtn.textContent = '现在补这 ' + miss + ' 张的位置';
+      fixBtn.href = 'remedy-page.html?trip=' + TRIP.id;
+    }
+    l1.innerHTML = 'DJI_0284.MP4 · <em>已解析 SRT 轨迹</em>';
+    l2.innerHTML = 'IMG_20261002_143201.jpg · <em>已读取 GPS</em>';
+    next.textContent = '查看 ' + N + ' 项';
+  }
+
+  next.addEventListener('click', function(){ next.href = 'trips.html'; });
+
+  step();
+})();
+</script>
+<script src="nav.js"></script>
+<script src="statusbar.js"></script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>带备注的照片</title>
+<link rel="stylesheet" href="proto.css">
+<script src="theme.js"></script>
+<style>
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:0 4px}
+  .cell{position:relative;border-radius:4px;overflow:hidden;cursor:pointer}
+  .cell .ph{height:118px}
+  .cell .cap{position:absolute;left:0;right:0;bottom:0;padding:16px 8px 8px;
+    background:linear-gradient(180deg,transparent,rgba(4,8,11,.94));
+    font-size:9px;line-height:1.5;color:#EFE3C6;height:38px;overflow:hidden}
+  .cell .tag{position:absolute;left:5px;top:5px;font-size:9px;padding:1px 4px;border-radius:3px;
+    background:rgba(108,140,255,.9);color:#fff}
+  .voice{display:flex;align-items:center;gap:8px;padding:8px 8px;border-radius:10px;
+    background:var(--panel2);border:1px solid var(--line);margin:12px 16px 0}
+  .voice .p{width:24px;height:24px;border-radius:50%;background:rgba(61,220,151,.14);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;font-size:9px;flex:0 0 24px}
+  .voice .w{display:flex;align-items:flex-end;gap:2px;height:16px;flex:1}
+  .voice .w i{display:block;width:2px;border-radius:1px;background:var(--accent)}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="device">
+    <div class="app">
+
+      <div class="head">
+        <a class="back" href="trips.html" data-back="trips.html">‹</a>
+        <div class="ht"><b>带备注的照片</b><span>云南 · 大理丽江 · 共 37 条</span></div>
+        <a class="hbtn" href="timeline-page.html">筛</a>
+      </div>
+
+      <div class="chips">
+        <span class="chip on">全部备注 37</span>
+        <span class="chip">语音 6</span>
+        <span class="chip">风景 14</span>
+        <span class="chip">踩坑 3</span>
+      </div>
+
+      <div class="scroll" id="scroll">
+        <div class="grid2" id="grid"></div>
+
+        <div class="voice">
+          <div class="p">▶</div>
+          <div class="w" id="wave"></div>
+          <span style="font-size:9px;color:var(--t3)">0:12</span>
+        </div>
+        <div style="text-align:center;font-size:9px;color:var(--t3);padding:8px 0 16px">语音备注 · 点开可听</div>
+      </div>
+
+    </div>
+  </div>
+  <p class="hint">P9 备注聚合 · 点任意照片进大图（带「修改」）· 左上角返回行程</p>
+</div>
+
+<script src="data.js"></script>
+<script src="lightbox.js"></script>
+<script>
+(function(){
+  var ARS = ['4 / 3','3 / 2','16 / 9','1 / 1','9 / 16'];
+
+  var DATA = [
+    {sc:'sc4', tag:'', txt:'风把帽子吹到海里了，追了半分钟才捡回来。', d:'10月3日 · 洱海东岸'},
+    {sc:'sc2', tag:'', txt:'老板娘说这家开了二十年，米线还是有点淡。', d:'10月3日 · 喜洲'},
+    {sc:'sc7', tag:'视频', txt:'这段 4K 60 帧拍得值，回去剪进片子。', d:'10月4日 · 双廊'},
+    {sc:'sc6', tag:'', txt:'海拔一上来就喘，但云海出现了。', d:'10月5日 · 沙溪'},
+    {sc:'sc1', tag:'', txt:'早上六点起来等日出，雾太厚，什么都没等到。', d:'10月4日 · 双廊'},
+    {sc:'sc3', tag:'', txt:'这片房子比照片里更陡，爬上去腿抖。', d:'10月5日 · 沙溪'},
+    {sc:'sc5', tag:'', txt:'晒了一整天，脖子后面脱皮了。', d:'10月3日 · 环海西路'},
+    {sc:'sc8', tag:'', txt:'导航把我们带进了田里，绕出来花了二十分钟。', d:'10月5日 · 沙溪'},
+    {sc:'sc3', tag:'', txt:'在这家客栈的天台坐了一小时，什么都没做。', d:'10月2日 · 大理古城'},
+    {sc:'sc6', tag:'', txt:'租的电动车没电了，推上坡推了八百米。', d:'10月3日 · 环海西路'},
+    {sc:'sc5', tag:'', txt:'买了三个喜洲粑粑，甜的比咸的好吃。', d:'10月3日 · 喜洲'},
+    {sc:'sc2', tag:'', txt:'临走前又去了一趟，还是没看到完整的日照金山。', d:'10月6日 · 凤仪'}
+  ];
+
+  var icons = '';
+  for(var i = 0; i < 40; i++){
+    var h = 4 + ((i * 37) % 13);
+    icons += '<i style="height:' + h + 'px"></i>';
+  }
+  document.getElementById('wave').innerHTML = icons;
+
+  var g = document.getElementById('grid'), html = '';
+  DATA.forEach(function(it, i){
+    html += '<div class="cell" data-i="' + i + '">';
+    html += '<div class="ph ' + it.sc + '"><span class="sun"></span><span class="hill"></span><span class="hill2"></span></div>';
+    if(it.tag) html += '<span class="tag">' + it.tag + '</span>';
+    html += '<div class="cap">' + it.txt + '</div></div>';
+  });
+  g.innerHTML = html;
+
+  g.addEventListener('click', function(e){
+    var c = e.target.closest('.cell');
+    if(!c) return;
+    var it = DATA[+c.dataset.i];
+    Lightbox.open({
+      sc: it.sc,
+      ar: ARS[+c.dataset.i % ARS.length],
+      title: it.d,
+      noteKey: 'notes:' + c.dataset.i,
+      noteDefault: it.txt
+    });
+  });
+
+  var chips = document.querySelectorAll('.chip');
+  for(var j = 0; j < chips.length; j++){
+    chips[j].addEventListener('click', function(){
+      for(var k = 0; k < chips.length; k++) chips[k].classList.remove('on');
+      this.classList.add('on');
+    });
+  }
+})();
+</script>
+<script src="nav.js"></script>
+<script src="statusbar.js"></script>
+</body>
+</html>

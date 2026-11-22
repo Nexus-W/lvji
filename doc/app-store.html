@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>旅迹 · 应用介绍</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    color: #1D1D1F; background: #fff;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    width: 210mm; height: 297mm;
+    padding: 26mm 22mm 18mm;
+    display: flex; flex-direction: column;
+    page-break-after: always; position: relative; overflow: hidden;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  /* ---------- 通用文字 ---------- */
+  .eyebrow {
+    font-size: 8.5pt; letter-spacing: .16em; text-transform: uppercase;
+    color: #86868B; font-weight: 500;
+  }
+  h1, h2, .cover .name {
+    font-family: "PingFang SC", "Microsoft YaHei Light", "Microsoft YaHei", sans-serif;
+    font-weight: 300;
+  }
+  h1 { font-size: 33pt; line-height: 1.30; letter-spacing: -.01em; margin: 0; }
+  h2 { font-size: 21pt; line-height: 1.42; letter-spacing: -.005em; margin: 0 0 12pt; }
+  h3 { font-size: 13pt; line-height: 1.4; font-weight: 600; margin: 0 0 6pt; }
+  p  { font-size: 10.5pt; line-height: 1.85; color: #424245; margin: 0 0 10pt; }
+  .lead { font-size: 12pt; line-height: 1.8; color: #1D1D1F; }
+  .accent { color: #0FB87A; }
+  .muted { color: #86868B; }
+  .rule { height: 1px; background: #E8E8ED; margin: 18pt 0; }
+
+  /* ---------- 页码 ---------- */
+  .foot {
+    position: absolute; left: 22mm; right: 22mm; bottom: 12mm;
+    display: flex; justify-content: space-between;
+    font-size: 8pt; color: #B0B0B5; letter-spacing: .04em;
+  }
+
+  /* ---------- 封面 ---------- */
+  .cover { justify-content: center; }
+  .cover .icon { width: 46mm; height: 46mm; border-radius: 23%; display: block;
+    box-shadow: 0 18pt 40pt -14pt rgba(0,0,0,.5); }
+  .cover .name { font-size: 36pt; letter-spacing: .01em; margin: 16pt 0 8pt; }
+  .cover .tag { font-size: 13pt; color: #424245; line-height: 1.7; max-width: 120mm; }
+  .cover .meta { font-size: 9pt; color: #86868B; margin-top: 14pt; letter-spacing: .02em; }
+
+  .stats { display: flex; gap: 0; margin-top: 34pt; border-top: 1px solid #E8E8ED;
+    padding-top: 16pt; }
+  .stat { flex: 1; }
+  .stat b { display: block; font-size: 19pt; font-weight: 400; letter-spacing: -.01em; }
+  .stat span { display: block; font-size: 8.5pt; color: #86868B; margin-top: 3pt; }
+
+  .getbtn {
+    align-self: flex-start;
+    display: inline-block; margin-top: 26pt; padding: 7pt 26pt;
+    background: #0FB87A; color: #fff; border-radius: 100pt;
+    font-size: 10pt; font-weight: 600; letter-spacing: .04em;
+  }
+
+  /* ---------- 截图 ---------- */
+  .shots { display: flex; gap: 8mm; justify-content: center; align-items: flex-end;
+    margin-bottom: 10mm; }
+  .shots figure { margin: 0; }
+  .shots img { display: block; width: 100%; border-radius: 5mm;
+    box-shadow: 0 10pt 28pt -10pt rgba(0,0,0,.35); }
+  .shots figcaption { font-size: 8pt; color: #86868B; text-align: center;
+    margin-top: 7pt; letter-spacing: .02em; }
+
+  .cols { display: flex; gap: 14mm; align-items: center; flex: 1; }
+  .cols .txt { flex: 1; }
+  .cols .pic { flex: 0 0 62mm; }
+  .cols .pic img { width: 100%; display: block; border-radius: 5mm;
+    box-shadow: 0 14pt 34pt -12pt rgba(0,0,0,.38); }
+
+  .kicker { font-size: 9pt; color: #0FB87A; font-weight: 600; letter-spacing: .08em;
+    margin-bottom: 8pt; }
+
+  .list { margin: 6pt 0 0; padding: 0; list-style: none; }
+  .list li { font-size: 10pt; line-height: 1.9; color: #424245; padding-left: 14pt;
+    position: relative; }
+  .list li::before { content: ""; position: absolute; left: 0; top: 7.5pt;
+    width: 5pt; height: 5pt; border-radius: 50%; background: #0FB87A; opacity: .55; }
+
+  /* ---------- 结尾 ---------- */
+  .end { justify-content: center; align-items: center; text-align: center; }
+  .end .icon { width: 30mm; height: 30mm; border-radius: 23%; margin-bottom: 18pt;
+    box-shadow: 0 14pt 30pt -12pt rgba(0,0,0,.45); }
+  .end h2 { margin-bottom: 10pt; }
+  .end p { max-width: 118mm; margin: 0 auto; }
+</style>
+</head>
+<body>
+
+<!-- ============ 1 封面 ============ -->
+<section class="page cover">
+  <div class="eyebrow">App Store 预览</div>
+  <img class="icon" src="../icons/icon-v9-1024.png" alt="旅迹">
+  <div class="name">旅迹</div>
+  <div class="tag">把每一次出发，整理成可以回看的地方。<br>
+    照片不再散落在相册深处，而是按行程、按天、按地点收好。</div>
+  <div class="meta">旅行相册 · iOS 17+ · 简体中文 · 无账号也能用</div>
+
+  <div class="stats">
+    <div class="stat"><b>3</b><span>次行程</span></div>
+    <div class="stat"><b>2,482</b><span>张照片</span></div>
+    <div class="stat"><b>5</b><span>座城市</span></div>
+    <div class="stat"><b>0</b><span>张上传云端</span></div>
+  </div>
+
+  <div class="getbtn">获取</div>
+
+  <div class="foot"><span>旅迹</span><span>01</span></div>
+</section>
+
+<!-- ============ 2 引言 ============ -->
+<section class="page">
+  <div class="eyebrow">为什么做这个</div>
+  <h1 style="margin-top:10pt">旅行回来，照片散在<br>三个月的相册里。</h1>
+  <p class="lead" style="margin-top:14pt;max-width:150mm">
+    一次旅行会留下几百上千张照片：手机拍的、相机拍的、无人机拍的，
+    还有朋友在微信里传给你的。它们混在同一个相册，
+    过两周就找不回“这是在洱海哪一段”的记忆。
+  </p>
+  <p style="max-width:150mm">
+    旅迹做的事很简单：<span class="accent">把一段旅行重新变回一段旅行</span>。
+    以行程为单位收拢照片，按天分组，按地点落在地图上，
+    再把最好的那几张挑出来，配一句当时想说的话。
+  </p>
+
+  <div class="shots" style="margin-top:auto">
+    <figure style="width:47mm"><img src="shots/trips.png"><figcaption>按行程收拢</figcaption></figure>
+    <figure style="width:47mm"><img src="shots/timeline.png"><figcaption>按天分组 · 精选</figcaption></figure>
+    <figure style="width:47mm"><img src="shots/map.png"><figcaption>落在地图上</figcaption></figure>
+  </div>
+
+  <div class="foot"><span>旅迹 · 应用介绍</span><span>02</span></div>
+</section>
+
+<!-- ============ 3 功能一 ============ -->
+<section class="page">
+  <div class="kicker">01 — 整理</div>
+  <div class="cols">
+    <div class="txt">
+      <h2>一次旅行，<br>一个容器。</h2>
+      <p>导入时选好来源，照片按拍摄时间自动归到对应那一天。
+        没有拍摄时间的（微信转发、截图），会单独列出来，不会硬塞进某一天。</p>
+      <p>行程本身也可以随时改：名字、起止日期，天数自动重算。</p>
+      <ul class="list">
+        <li>支持手机相册与文件夹两种来源</li>
+        <li>导入前先选素材，点「导入」才开始</li>
+        <li>照片只在本地，不上传云端</li>
+      </ul>
+    </div>
+    <div class="pic"><img src="shots/import.png"></div>
+  </div>
+  <div class="rule"></div>
+  <p class="muted" style="font-size:9.5pt;margin:0">
+    封面只取你亲手挑选的照片：卡片用最近三次，列表用最近一次。
+    没挑过，就用行程里第一张。
+  </p>
+  <div class="foot"><span>整理</span><span>03</span></div>
+</section>
+
+<!-- ============ 4 功能二 ============ -->
+<section class="page">
+  <div class="kicker">02 — 地图</div>
+  <div class="cols">
+    <div class="pic"><img src="shots/map.png"></div>
+    <div class="txt">
+      <h2>每一张照片，<br>都知道自己在哪。</h2>
+      <p>地图上按位置聚合成点，滑动照片列表，地图会跟着走。
+        点开一张，可以看到它在行程中的位置。</p>
+      <p>长按照片进入选片模式，可以一次把多张加入精选，或者移除。</p>
+      <ul class="list">
+        <li>照片按拍摄地点聚合，不按行政区域</li>
+        <li>轨迹与选点都在本地计算</li>
+        <li>地图上的标记与展板里的三种标记一致</li>
+      </ul>
+    </div>
+  </div>
+  <div class="rule"></div>
+  <p class="muted" style="font-size:9.5pt;margin:0">
+    金色是封面，绿色是精选，紫色是写过备注的照片。三种颜色在两个页面里含义相同。
+  </p>
+  <div class="foot"><span>地图</span><span>04</span></div>
+</section>
+
+<!-- ============ 5 功能三 ============ -->
+<section class="page">
+  <div class="kicker">03 — 精选与手记</div>
+  <div class="cols">
+    <div class="txt">
+      <h2>从八百张里，<br>留下十张。</h2>
+      <p>展板只显示你标记过的照片：封面、精选、有备注的。
+        不需要一张张翻，它替你记住“哪几张值得再看”。</p>
+      <p>手记写在行程下面，不限格式。返回首页时，
+        卡片上显示的是手记的第一行。</p>
+      <ul class="list">
+        <li>展板按天分区，和行程日期一致</li>
+        <li>可按日期或地点切换分组</li>
+        <li>大图里能改时间、地点和备注</li>
+      </ul>
+    </div>
+    <div class="pic"><img src="shots/timeline.png"></div>
+  </div>
+  <div class="foot"><span>精选</span><span>05</span></div>
+</section>
+
+<!-- ============ 6 功能四 + 结尾 ============ -->
+<section class="page">
+  <div class="kicker">04 — 校准</div>
+  <div class="cols">
+    <div class="pic"><img src="shots/remedy.png"></div>
+    <div class="txt">
+      <h2>信息错了，<br>改回来就好。</h2>
+      <p>朋友在微信传给你的照片没有位置信息，无人机拍的没有 GPS，
+        时间也可能是错乱的。旅迹把这些照片单独列出来，等你补。</p>
+      <p>可以在地图上点一个位置，也可以搜地名。
+        补完的照片立刻离开这个列表，回到对应行程里。</p>
+      <ul class="list">
+        <li>一键采纳同设备照片的推测位置</li>
+        <li>地图点选后反查附近地名</li>
+        <li>只写本地索引，不改动原图</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+
+  <div class="end" style="margin-top:auto;padding-bottom:20mm">
+    <img class="icon" src="../icons/icon-v9-1024.png" alt="旅迹">
+    <h2>照片留在本地，<br>记忆留在旅迹。</h2>
+    <p class="muted" style="font-size:9.5pt">
+      不注册、不上传、不压缩。你的照片只在你自己的设备上。
+    </p>
+  </div>
+
+  <div class="foot"><span>校准</span><span>06</span></div>
+</section>
+
+</body>
+</html>
