@@ -15,6 +15,14 @@
 - 天气回填：按天取历史天气（Open-Meteo archive API），不显示预报
 - 备份与恢复、分享、图片压缩、备注与手记
 
+## 直接下载
+
+不装 Flutter 也可以先装 APK：
+
+- [lvji-v1.0.70-arm64.apk](dist/lvji-v1.0.70-arm64.apk)（Android arm64，约 34 MB，调试签名，仅供安装体验）
+
+这个包没有内置腾讯地图 Key，地图会降级；需要完整地图时按下面的方式用自己的 Key 构建。Releases 页由 tag 自动生成。
+
 ## 快速开始
 
 环境：Flutter 3.47.x、Android SDK、JDK 17。
